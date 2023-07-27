@@ -3,3 +3,6 @@ This is the repo for FA 3526 "Robustes und Adaptives Multi-Modal Machine Learnin
 
 # How to run the code
 TODO: Update later
+
+# Authors
+- Dominik Eißen (st177975@stud.uni-stuttgart.de)
