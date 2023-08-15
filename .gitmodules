@@ -1,0 +1,3 @@
+[submodule "FTDDataset"]
+	path = FTDDataset
+	url = ../Floor-Type-Detection-Dataset.git
