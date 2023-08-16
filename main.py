@@ -36,9 +36,9 @@ if __name__ == "__main__":
     transformed_dataset = FloorTypeDetectionDataset(
         dataset_path, sensors, mapping_filename, transform=composed_transforms)
 
+    # split in train and test dataset
     train_size = int(0.8 * len(transformed_dataset))
     test_size = len(transformed_dataset) - train_size
-
     train_dataset, test_dataset = torch.utils.data.random_split(
         transformed_dataset, [train_size, test_size])
 
@@ -48,12 +48,13 @@ if __name__ == "__main__":
     testloader = DataLoader(test_dataset,
                             batch_size=8, shuffle=True, drop_last=True)
     
+    # define model, loss and optimizer
     net = LeNet()
-
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
-    for epoch in range(20):  # loop over the dataset multiple times
+    # training loop
+    for epoch in range(10):
         running_loss = 0.0
         for i, data in enumerate(trainloader, 0):
             # get the inputs
@@ -76,9 +77,10 @@ if __name__ == "__main__":
                 print('[%d, %5d] loss: %.3f' %
                     (epoch + 1, i + 1, running_loss / 50))
                 running_loss = 0.0
-
+    
     print('Finished Training')
 
+    # test loop
     correct = 0
     total = 0
     with torch.no_grad():
@@ -90,5 +92,5 @@ if __name__ == "__main__":
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-    print('Accuracy of the network on the 10000 test images: %d %%' % (
+    print(f'Accuracy of the network on the {len(test_dataset)} test images: %d %%' % (
         100 * correct / total))
