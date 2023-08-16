@@ -7,20 +7,26 @@ from torch.utils.data import DataLoader
 import datetime
 
 
-def evaluate(model, ds_test, sensors, config):
+from visualization.visualization import visualize_data_sample_or_batch
+
+
+def evaluate(model, ds_test, sensors, config, visualize_result=False):
     ds_test_loader = DataLoader(
         ds_test, batch_size=config["batch_size"], shuffle=True, drop_last=False)
 
     correct = 0
     total = 0
     with torch.no_grad():
-        for data in ds_test_loader:
-            images, labels = data
-            images = images[sensors[0]]
-            outputs = model(images)
+        for (data_dict, labels) in ds_test_loader:
+            input = data_dict[sensors[0]]
+            outputs = model(input)
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-    print(f'Accuracy of the network on the {len(ds_test)} test images: %d %%' % (
+    print(f'Accuracy of the network on the {len(ds_test)} test data: %d %%' % (
         100 * correct / total))
+    
+    if visualize_result:
+        print("Show example prediction for first image of last batch:")
+        visualize_data_sample_or_batch(data_dict, labels, predicted)

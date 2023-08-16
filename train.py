@@ -43,9 +43,9 @@ class Trainer():
             # reset metrics at beginning of epoch
             self.running_loss = 0.0
 
-            for step_index, (inputs_dict, labels) in enumerate(self.ds_train_loader, 0):
+            for step_index, (data_dict, labels) in enumerate(self.ds_train_loader, 0):
 
-                self.train_step(inputs_dict, labels)
+                self.train_step(data_dict, labels)
 
                 # log metrics in log_interval
                 if step_index % self.log_interval == self.log_interval - 1:
@@ -53,11 +53,11 @@ class Trainer():
 
         print('Finished Training')
 
-    def train_step(self, inputs_dict, labels):
-        # prepare inputs_dict for model
+    def train_step(self, data_dict, labels):
+        # prepare data_dict for model
         if len(self.sensors) == 1:
             # extract input for uni-modal case
-            inputs = inputs_dict[self.sensors[0]]
+            inputs = data_dict[self.sensors[0]]
         else:
             # TODO: extract input for multi-modal case
             pass
