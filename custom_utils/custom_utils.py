@@ -1,7 +1,8 @@
 import os
 import datetime
 import logging
-
+import json
+import os.path as path
 
 def gen_run_dir(present_run_path=""):
     """
@@ -84,3 +85,33 @@ def start_logger(log_dir_path, logging_level=0, stream_log=False):
 
     # disable matplotlib font_manager logging as it's not needed
     logging.getLogger('matplotlib.font_manager').disabled = True
+
+def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict):
+    """
+        Function to store all config dicts as JSON files in config_path of the run dir.
+
+        Parameters:
+            - run_paths_dict (dict): Dict containing all paths for the run dir
+            - label_mapping_dict (dict): Dict containing label to number mapping of this run
+            - preprocessing_config_dict (dict): Dict containing preprocessing config of this run
+            - train_config_dict (dict): Dict containing training config of this run
+    """
+    label_mapping_config_path = path.join(run_paths_dict["config_path"], "label_mapping_config.json")
+    preprocessing_config_path =  path.join(run_paths_dict["config_path"], "preprocessing_config.json")
+    train_config_path =  path.join(run_paths_dict["config_path"], "train_config.json")
+
+    save_struct_as_json(label_mapping_config_path, label_mapping_dict)
+    save_struct_as_json(preprocessing_config_path, preprocessing_config_dict)
+    save_struct_as_json(train_config_path, train_config_dict)
+
+
+def save_struct_as_json(new_file_path, dict_to_save):
+    """
+        Function to save a dict as a json file at new_file_path.
+
+        Parameters:
+            - new_file_path (str): Filename as string for JSON file to create
+            - dict_to_save (dict): Dict which shall be saved
+    """
+    with open(new_file_path, "w") as fp:
+        json.dump(dict_to_save, fp, indent=3)

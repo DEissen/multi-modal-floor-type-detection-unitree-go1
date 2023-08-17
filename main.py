@@ -7,7 +7,7 @@ from unimodal_models.LeNet import LeNet
 from train import Trainer
 from eval import evaluate
 from visualization.visualization import visualize_data_sample_or_batch
-from custom_utils.custom_utils import gen_run_dir, start_logger
+from custom_utils.custom_utils import gen_run_dir, start_logger, store_used_config
 
 if __name__ == "__main__":
     run_paths_dict = gen_run_dir()
@@ -24,8 +24,8 @@ if __name__ == "__main__":
     sensors = ["BellyCamRight"]
 
     # config for training
-    train_config = {
-        "epochs": 15,
+    train_config_dict = {
+        "epochs": 1,
         "batch_size": 4,
         "lr": 0.001,
         "momentum": 0.9
@@ -54,8 +54,11 @@ if __name__ == "__main__":
 
     # training loop
     trainer = Trainer(model, ds_train, ds_test, sensors,
-                      train_config, 50, run_paths_dict, True)
+                      train_config_dict, 50, run_paths_dict, False)
     trainer.train()
 
     # test loop
-    evaluate(model, ds_train, sensors, train_config, True)
+    evaluate(model, ds_train, sensors, train_config_dict, True)
+
+    # store used config as final step of logging
+    store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict)
