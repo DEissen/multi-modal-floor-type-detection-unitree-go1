@@ -1,16 +1,13 @@
-import wandb
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 from torch.utils.data import DataLoader
-import datetime
+import logging
 
 
 from visualization.visualization import visualize_data_sample_or_batch
 
 
 def evaluate(model, ds_test, sensors, config, visualize_result=False):
+    logging.info('######### Start evaluation #########')
     ds_test_loader = DataLoader(
         ds_test, batch_size=config["batch_size"], shuffle=True, drop_last=False)
 
@@ -24,9 +21,9 @@ def evaluate(model, ds_test, sensors, config, visualize_result=False):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-    print(f'Accuracy of the network on the {len(ds_test)} test data: %d %%' % (
-        100 * correct / total))
+    logging.info(f'Accuracy of the network on the {len(ds_test)} test data: {(100 * correct / total):.2f} %')
+    logging.info('######### Finished evaluation #########')
     
     if visualize_result:
-        print("Show example prediction for first image of last batch:")
+        logging.info("Show example prediction for first image of last batch:")
         visualize_data_sample_or_batch(data_dict, labels, predicted)

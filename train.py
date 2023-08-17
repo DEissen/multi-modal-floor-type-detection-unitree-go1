@@ -5,16 +5,16 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import datetime
-
+import logging
 
 class Trainer():
-    def __init__(self, model, ds_train, ds_val, sensors, config, log_interval, run_paths, write_to_wandb):
+    def __init__(self, model, ds_train, ds_val, sensors, config, log_interval, run_paths_dict, write_to_wandb):
         # store parameters as members
         self.model = model
         self.sensors = sensors
         self.config = config
         self.log_interval = log_interval
-        self.run_paths = run_paths
+        self.run_paths_dict = run_paths_dict
         self.write_to_wandb = write_to_wandb
 
         # login to Weights & Biases
@@ -22,8 +22,8 @@ class Trainer():
             wandb.login()
             display_name = datetime.datetime.now().strftime(
                 '%d.%m_%H:%M:%S')
-            wandb.init(project="FA", entity="st177975",
-                       config=self.config, name=display_name)
+            wandb.init(project="FA", entity="st177975", dir=self.run_paths_dict["wandb_path"],
+                       config=self.config, name=display_name, resume="auto")
 
         # create data loader
         self.ds_train_loader = DataLoader(ds_train,
@@ -39,6 +39,7 @@ class Trainer():
         ), lr=config["lr"], momentum=config["momentum"])
 
     def train(self):
+        logging.info('######### Start training #########')
         for epoch_index in range(self.config["epochs"]):
             # reset metrics at beginning of epoch
             self.running_loss = 0.0
@@ -51,7 +52,7 @@ class Trainer():
                 if step_index % self.log_interval == self.log_interval - 1:
                     self.plot_metrics(epoch_index, step_index)
 
-        print('Finished Training')
+        logging.info('######### Finished training #########')
 
     def train_step(self, data_dict, labels):
         # prepare data_dict for model
@@ -83,9 +84,8 @@ class Trainer():
         # prepare metrics for logging
         self.train_loss = self.running_loss / self.log_interval
 
-        # print metrics
-        print('[%d, %5d] loss: %.3f' %
-              (num_epoch, num_step, self.train_loss))
+        # log metrics
+        logging.info(f'[{num_epoch:d}, {num_step:5d}] loss: {self.train_loss:.3f}')
 
         # log to wandb if configured
         if self.write_to_wandb:
