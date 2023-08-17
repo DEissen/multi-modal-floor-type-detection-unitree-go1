@@ -2,7 +2,7 @@ import torch
 import torchvision.transforms as transforms
 
 # custom imports
-from FTDDataset.FTDDataset import FloorTypeDetectionDataset, FTDD_Crop, FTDD_Normalize, FTDD_Rescale, FTDD_ToTensor
+from FTDDataset.FTDDataset import FloorTypeDetectionDataset
 from unimodal_models.LeNet import LeNet
 from train import Trainer
 from eval import evaluate
@@ -27,17 +27,9 @@ if __name__ == "__main__":
         "momentum": 0.9
     }
 
-    # create list of transformations to perform (data preprocessing + failure case creation)
-    transformations_list = []
-    transformations_list.append(FTDD_Crop(preprocessing_config_filename))
-    transformations_list.append(FTDD_Rescale(preprocessing_config_filename))
-    transformations_list.append(FTDD_Normalize(preprocessing_config_filename))
-    transformations_list.append(FTDD_ToTensor())
-    composed_transforms = transforms.Compose(transformations_list)
-
     # create dataset
     transformed_dataset = FloorTypeDetectionDataset(
-        dataset_path, sensors, mapping_filename, transform=composed_transforms)
+        dataset_path, sensors, mapping_filename, preprocessing_config_filename)
 
     # split in train and test dataset
     train_size = int(0.8 * len(transformed_dataset))
@@ -45,9 +37,9 @@ if __name__ == "__main__":
     ds_train, ds_test = torch.utils.data.random_split(
         transformed_dataset, [train_size, test_size])
 
-    # # visualize sample from dataset for testing
-    # data_for_vis, label_for_vis = ds_train.__getitem__(0)
-    # visualize_data_sample_or_batch(data_for_vis, label_for_vis)
+    # visualize sample from dataset for testing
+    data_for_vis, label_for_vis = ds_train.__getitem__(0)
+    visualize_data_sample_or_batch(data_for_vis, label_for_vis)
 
     # define model, loss and optimizer
     model = LeNet()
