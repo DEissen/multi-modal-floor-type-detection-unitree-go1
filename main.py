@@ -29,7 +29,8 @@ if __name__ == "__main__":
         "batch_size": 4,
         "lr": 0.001,
         "momentum": 0.9,
-        "use_wandb": False,
+        "num_classes": 2,
+        "use_wandb": True,
         "visualize_results": False
     }
 
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     # visualize_data_sample_or_batch(data_for_vis, label_for_vis)
 
     # define model, loss and optimizer
-    model = LeNet()
+    model = LeNet(train_config_dict["num_classes"])
 
     # training loop
     trainer = Trainer(model, ds_train, ds_test, sensors,
