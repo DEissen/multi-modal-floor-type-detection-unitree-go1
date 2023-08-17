@@ -15,8 +15,8 @@ def evaluate(model, ds_test, sensors, config, visualize_result=False):
     total = 0
     with torch.no_grad():
         for (data_dict, labels) in ds_test_loader:
-            input = data_dict[sensors[0]]
-            outputs = model(input)
+            inputs = data_dict[sensors[0]]
+            outputs = model(inputs)
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()

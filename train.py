@@ -50,6 +50,7 @@ class Trainer():
 
                 # log metrics in log_interval
                 if step_index % self.log_interval == self.log_interval - 1:
+                    self.validation_for_logging()
                     self.plot_metrics(epoch_index, step_index)
 
         logging.info('######### Finished training #########')
@@ -74,6 +75,29 @@ class Trainer():
 
         # update metrics
         self.running_loss += loss.item()
+
+    def validation_for_logging(self):
+        total = 0
+        correct = 0
+        with torch.no_grad():
+            for (data_dict, labels) in self.ds_val_loader:
+                # prepare data_dict for model
+                if len(self.sensors) == 1:
+                    # extract input for uni-modal case
+                    inputs = data_dict[self.sensors[0]]
+                else:
+                    # TODO: extract input for multi-modal case
+                    pass
+
+                # get predicitons
+                outputs = self.model(inputs)
+
+                # update metrics
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+        
+        logging.info(f'Accuracy of the network on the validation dataset: {(100 * correct / total):.2f} %')
 
     def plot_metrics(self, epoch_index, step_index):
         # prepare step and epoch index for logging

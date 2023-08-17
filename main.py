@@ -25,10 +25,12 @@ if __name__ == "__main__":
 
     # config for training
     train_config_dict = {
-        "epochs": 1,
+        "epochs": 20,
         "batch_size": 4,
         "lr": 0.001,
-        "momentum": 0.9
+        "momentum": 0.9,
+        "use_wandb": False,
+        "visualize_results": False
     }
 
     # create dataset
@@ -54,11 +56,11 @@ if __name__ == "__main__":
 
     # training loop
     trainer = Trainer(model, ds_train, ds_test, sensors,
-                      train_config_dict, 50, run_paths_dict, False)
+                      train_config_dict, 50, run_paths_dict, train_config_dict["use_wandb"])
     trainer.train()
 
     # test loop
-    evaluate(model, ds_train, sensors, train_config_dict, True)
+    evaluate(model, ds_train, sensors, train_config_dict, train_config_dict["visualize_results"])
 
     # store used config as final step of logging
     store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict)
