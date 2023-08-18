@@ -12,7 +12,7 @@ from custom_utils.custom_utils import gen_run_dir, start_logger, store_used_conf
 TRAINING = True
 
 if __name__ == "__main__":
-    run_paths_dict = gen_run_dir()
+    run_paths_dict = gen_run_dir(r"")
     start_logger(run_paths_dict["logs_path"], stream_log=True)
 
     # variables for dataset and config to use
