@@ -88,6 +88,7 @@ def visualize_data_sample_or_batch(data_dict, label=None, prediction=None):
 
         # logic for IMU data
         else:
+            # TODO transpose data back to normal shape
             # extract timeseries data
             data_dimension = len(data_dict[sensor].shape)
             if data_dimension == 3:

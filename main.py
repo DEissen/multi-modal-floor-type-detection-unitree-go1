@@ -3,7 +3,7 @@ import os
 
 # custom imports
 from FTDDataset.FTDDataset import FloorTypeDetectionDataset
-from models.unimodal_models import LeNet_like, VGG_Like
+from models.unimodal_models import LeNet_Like, VGG_Like, LeNet_Like1D
 from train import Trainer
 from eval import evaluate, load_state_dict
 from visualization.visualization import visualize_data_sample_or_batch
@@ -23,12 +23,12 @@ if __name__ == "__main__":
     # list of sensors to use
     # sensors = ['accelerometer', 'BellyCamLeft', 'BellyCamRight', 'bodyHeight', 'ChinCamLeft', 'ChinCamRight', 'footForce', 'footRaiseHeight', 'gyroscope',
     #            'HeadCamLeft', 'HeadCamRight', 'LeftCamLeft', 'LeftCamRight', 'mode', 'RightCamLeft', 'RightCamRight', 'temperature', 'velocity', 'yawSpeed']
-    sensors = ["BellyCamRight"]
+    sensors = ["footForce"]
 
     # config for training
     train_config_dict = {
         "epochs": 15,
-        "batch_size": 8,
+        "batch_size": 4,
         "lr": 0.001,
         "momentum": 0.9,
         "dropout_rate": 0.2,
@@ -58,9 +58,15 @@ if __name__ == "__main__":
     # data_for_vis, label_for_vis = ds_train.__getitem__(0)
     # visualize_data_sample_or_batch(data_for_vis, label_for_vis)
 
-    # define model, loss and optimizer
-    model = LeNet_like(train_config_dict["num_classes"])
+    # define model
+    ### for images
+    model = LeNet_Like(train_config_dict["num_classes"])
     # model = VGG_Like(train_config_dict["num_classes"], train_config_dict["dropout_rate"])
+
+    ### for IMU data
+    index, (test_sampel, test_label) = next(enumerate(ds_train))
+    num_input_features = test_sampel[sensors[0]].size()[0]
+    model = LeNet_Like1D(train_config_dict["num_classes"], num_input_features)
 
     if TRAINING == True:
         # training loop
