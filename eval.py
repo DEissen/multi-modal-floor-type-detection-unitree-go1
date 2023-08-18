@@ -2,28 +2,65 @@ import torch
 from torch.utils.data import DataLoader
 import logging
 
+# custom imports
+from metrics.confusion_matrix import ConfusionMatrix
+
 
 from visualization.visualization import visualize_data_sample_or_batch
 
 
-def evaluate(model, ds_test, sensors, config, visualize_result=False):
-    logging.info('######### Start evaluation #########')
-    ds_test_loader = DataLoader(
-        ds_test, batch_size=config["batch_size"], shuffle=True, drop_last=False)
+def evaluate(model, ds_test, sensors, config_dict):
+    # initialize confusion matrix
+    test_confusion_matrix = ConfusionMatrix(config_dict["num_classes"])
 
-    correct = 0
-    total = 0
+    # prepare test set
+    ds_test_loader = DataLoader(
+        ds_test, batch_size=config_dict["batch_size"], shuffle=True, drop_last=False)
+
+    logging.info('######### Start evaluation #########')
+    # get predictions for test set
     with torch.no_grad():
         for (data_dict, labels) in ds_test_loader:
-            inputs = data_dict[sensors[0]]
+            # prepare data_dict for model
+            if len(sensors) == 1:
+                # extract input for uni-modal case
+                inputs = data_dict[sensors[0]]
+            else:
+                # TODO: extract input for multi-modal case
+                pass
+            
+            # get predictions
             outputs = model(inputs)
             _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
 
-    logging.info(f'Accuracy of the network on the {len(ds_test)} test data: {(100 * correct / total):.2f} %')
+            # update confusion matrix
+            test_confusion_matrix.update(predicted, labels)
+
+    # prepare metrics for logging
+    test_accuracy = test_confusion_matrix.get_accuracy()
+    test_sensitivity = test_confusion_matrix.get_sensitivity()
+    test_specificity = test_confusion_matrix.get_specificity()
+    if config_dict["num_classes"] == 2:
+        test_balanced_accuracy = test_confusion_matrix.get_balanced_accuracy()
+    else:
+        test_balanced_accuracy = torch.sum(
+            test_confusion_matrix.get_balanced_accuracy()) / config_dict["num_classes"]
+
+    # log metrics to console
+    logging_message = [f'\nResults for test set:',
+                        f'val acc: {test_accuracy*100:.2f} %',
+                        f'val sensitivity: {test_sensitivity*100:.2f} %',
+                        f'val specificity: {test_specificity*100:.2f} %',
+                        f'val balanced acc: {test_balanced_accuracy*100:.2f} %',
+                        f'val confusion matrix:\n{test_confusion_matrix.get_result()}']
+    logging_message = "\n".join(logging_message)
+    logging.info(logging_message)
+
     logging.info('######### Finished evaluation #########')
     
-    if visualize_result:
+    if config_dict["visualize_results"]:
         logging.info("Show example prediction for first image of last batch:")
         visualize_data_sample_or_batch(data_dict, labels, predicted)
+        # plot does somehow not work yet!
+        # logging.info("Show plot of confusion matrix:")
+        # test_confusion_matrix.plot()

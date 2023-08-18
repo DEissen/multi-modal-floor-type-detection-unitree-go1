@@ -31,7 +31,10 @@ if __name__ == "__main__":
         "momentum": 0.9,
         "num_classes": 2,
         "use_wandb": True,
-        "visualize_results": False
+        "visualize_results": False,
+        "train_log_interval": 50,
+        "sensors": sensors,
+        "dataset_path": dataset_path
     }
 
     # create dataset
@@ -57,11 +60,11 @@ if __name__ == "__main__":
 
     # training loop
     trainer = Trainer(model, ds_train, ds_test, sensors,
-                      train_config_dict, 50, run_paths_dict, train_config_dict["use_wandb"])
+                      train_config_dict, run_paths_dict)
     trainer.train()
 
     # test loop
-    evaluate(model, ds_train, sensors, train_config_dict, train_config_dict["visualize_results"])
+    evaluate(model, ds_train, sensors, train_config_dict)
 
     # store used config as final step of logging
     store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict)

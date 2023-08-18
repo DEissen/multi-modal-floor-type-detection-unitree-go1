@@ -11,44 +11,44 @@ from metrics.confusion_matrix import ConfusionMatrix
 
 
 class Trainer():
-    def __init__(self, model, ds_train, ds_val, sensors, config, log_interval, run_paths_dict, write_to_wandb):
+    def __init__(self, model, ds_train, ds_val, sensors, config_dict, run_paths_dict):
         # store parameters as members
         self.model = model
         self.sensors = sensors
-        self.config = config
-        self.log_interval = log_interval
+        self.config_dict = config_dict
+        self.log_interval = self.config_dict["train_log_interval"]
         self.run_paths_dict = run_paths_dict
-        self.write_to_wandb = write_to_wandb
 
         # login to Weights & Biases
-        if self.write_to_wandb:
+        if self.config_dict["use_wandb"]:
             wandb.login()
             display_name = datetime.datetime.now().strftime(
                 '%d.%m_%H:%M:%S')
             wandb.init(project="FA", entity="st177975", dir=self.run_paths_dict["wandb_path"],
-                       config=self.config, name=display_name, resume="auto")
+                       config=self.config_dict, name=display_name, resume="auto")
 
         # create data loader
         self.ds_train_loader = DataLoader(ds_train,
-                                          batch_size=config["batch_size"], shuffle=True, drop_last=True)
+                                          batch_size=config_dict["batch_size"], shuffle=True, drop_last=True)
         self.ds_val_loader = DataLoader(ds_val,
-                                        batch_size=config["batch_size"], shuffle=True, drop_last=True)
+                                        batch_size=config_dict["batch_size"], shuffle=True, drop_last=True)
         # calculate number of steps per epoch for logging
-        self.steps_per_epoch = int(len(ds_train)/config["batch_size"])
+        self.steps_per_epoch = int(len(ds_train)/config_dict["batch_size"])
 
         # loss and optimizer
         self.loss_object = nn.CrossEntropyLoss()
         self.optimizer = optim.SGD(self.model.parameters(
-        ), lr=config["lr"], momentum=config["momentum"])
+        ), lr=config_dict["lr"], momentum=config_dict["momentum"])
 
         # metrics
         self.train_confusion_matrix = ConfusionMatrix(
-            self.config["num_classes"])
-        self.val_confusion_matrix = ConfusionMatrix(self.config["num_classes"])
+            self.config_dict["num_classes"])
+        self.val_confusion_matrix = ConfusionMatrix(
+            self.config_dict["num_classes"])
 
     def train(self):
         logging.info('######### Start training #########')
-        for epoch_index in range(self.config["epochs"]):
+        for epoch_index in range(self.config_dict["epochs"]):
             # reset metrics at beginning of epoch
             self.running_loss = 0.0
             self.train_confusion_matrix.reset()
@@ -125,24 +125,33 @@ class Trainer():
         val_sensitivity = self.val_confusion_matrix.get_sensitivity()
         val_specificity = self.val_confusion_matrix.get_specificity()
 
-        if self.config["num_classes"] == 2:
+        if self.config_dict["num_classes"] == 2:
             train_balanced_accuracy = self.train_confusion_matrix.get_balanced_accuracy()
             val_balanced_accuracy = self.val_confusion_matrix.get_balanced_accuracy()
         else:
             train_balanced_accuracy = torch.sum(
-                self.train_confusion_matrix.get_balanced_accuracy()) / self.config["num_classes"]
+                self.train_confusion_matrix.get_balanced_accuracy()) / self.config_dict["num_classes"]
             val_balanced_accuracy = torch.sum(
-                self.val_confusion_matrix.get_balanced_accuracy()) / self.config["num_classes"]
+                self.val_confusion_matrix.get_balanced_accuracy()) / self.config_dict["num_classes"]
 
         # log metrics to console/ logging file
-        logging_message = f'\n[Epoch: {num_epoch:d}, Step: {num_step:5d}]:\n' + f'loss: {self.train_loss:.3f}\n' + f'train acc: {train_accuracy*100:.2f} %\n' + f'train sensitivity: {train_sensitivity*100:.2f} %\n' + f'train specificity: {train_specificity*100:.2f} %\n' + f'train balanced acc: {train_balanced_accuracy*100:.2f} %\n' + \
-            f'val acc: {val_accuracy*100:.2f} %\n' + f'val sensitivity: {val_sensitivity*100:.2f} %\n' + f'val specificity: {val_specificity*100:.2f} %\n' + \
-            f'val balanced acc: {val_balanced_accuracy*100:.2f} %\n' + \
-            f'val confusion matrix:\n{self.val_confusion_matrix.get_result()}'
+        # create logging message by list for better readability and easier way to add new messages
+        logging_message = [f'\n[Epoch: {num_epoch:d}, Step: {num_step:5d}]:',
+                           f'loss: {self.train_loss:.3f}',
+                           f'train acc: {train_accuracy*100:.2f} %',
+                           f'train sensitivity: {train_sensitivity*100:.2f} %',
+                           f'train specificity: {train_specificity*100:.2f} %',
+                           f'train balanced acc: {train_balanced_accuracy*100:.2f} %',
+                           f'val acc: {val_accuracy*100:.2f} %',
+                           f'val sensitivity: {val_sensitivity*100:.2f} %',
+                           f'val specificity: {val_specificity*100:.2f} %',
+                           f'val balanced acc: {val_balanced_accuracy*100:.2f} %',
+                           f'val confusion matrix:\n{self.val_confusion_matrix.get_result()}']
+        logging_message = "\n".join(logging_message)
         logging.info(logging_message)
 
         # log to wandb if configured
-        if self.write_to_wandb:
+        if self.config_dict["use_wandb"]:
             wandb.log({'Train/loss': self.train_loss,
                        "Train/acc": train_accuracy,
                        "Train/sensitivity": train_sensitivity,
