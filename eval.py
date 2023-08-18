@@ -72,3 +72,17 @@ def evaluate(model, ds_test, sensors, config_dict):
         # plot does somehow not work yet!
         # logging.info("Show plot of confusion matrix:")
         # test_confusion_matrix.plot()
+
+def load_state_dict(model, load_path):
+    """
+        Function to load state dict form load_path to model.
+        NOTE: Model is passed as reference -> original model will be automatically updated.
+              Thus this function does not return anything.
+
+        Parameters:
+            - model (torch.nn): Model for which state dict shall be loaded
+            - load_path (str): Path of the .pt file which contains the stored state dict
+    """
+    model.load_state_dict(torch.load(load_path))
+    
+    logging.info(f"Loaded state_dict for the model from '{load_path}'")

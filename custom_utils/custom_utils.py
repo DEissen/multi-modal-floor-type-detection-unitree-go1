@@ -47,6 +47,8 @@ def gen_run_dir(present_run_path=""):
         run_paths_dict['run_path'], 'config')
     run_paths_dict['wandb_path'] = os.path.join(
         run_paths_dict['run_path'], 'wandb')
+    run_paths_dict['model_ckpts'] = os.path.join(
+        run_paths_dict['run_path'], 'model_ckpts')
 
     # Create dirs in new run_path if they don't exist yet
     for key, path in run_paths_dict.items():

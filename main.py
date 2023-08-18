@@ -64,7 +64,7 @@ if __name__ == "__main__":
     trainer.train()
 
     # test loop
-    evaluate(model, ds_train, sensors, train_config_dict)
+    evaluate(model, ds_test, sensors, train_config_dict)
 
     # store used config as final step of logging
     store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict)

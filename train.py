@@ -5,6 +5,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import datetime
 import logging
+import os
 
 # custom imports
 from metrics.confusion_matrix import ConfusionMatrix
@@ -42,11 +43,11 @@ class Trainer():
 
             # create name of run based on current time and number of sensors
             display_name = datetime.datetime.now().strftime(
-                '%d.%m_%H:%M:%S')
+                '%d.%m_%H:%M:%S_', model._get_name())
             if len(self.sensors) == 1:
-                display_name += "_unimodal"
+                display_name += "_unimod"
             else:
-                display_name += "_multimodal"
+                display_name += "_multimod"
 
             wandb.init(project="FA", entity="st177975", dir=self.run_paths_dict["wandb_path"],
                        config=self.config_dict, name=display_name, resume="auto")
@@ -75,6 +76,14 @@ class Trainer():
             Method to start the training of the model, including evaluation and logging during training.
         """
         logging.info('######### Start training #########')
+        # check and log used device for training
+        device = (
+            "cuda"
+            if torch.cuda.is_available()
+            else "cpu"
+        )
+        logging.info(f"Using {device} device")
+
         # outer loop for epochs
         for epoch_index in range(self.config_dict["epochs"]):
             # reset metrics at beginning of epoch
@@ -93,6 +102,9 @@ class Trainer():
             # log current results of the confusion matrix for the training dataset for this epoch
             logging.info(
                 f"\n[Epoch: {epoch_index+1:d}, Step: end] Train confusion matrix:\n{self.train_confusion_matrix.get_result()}")
+
+            # save model after each epoch
+            self.save_current_model(epoch_index+1)
 
         logging.info('######### Finished training #########')
 
@@ -226,3 +238,19 @@ class Trainer():
                 # update metrics
                 _, predicted = torch.max(outputs.data, 1)
                 self.val_confusion_matrix.update(predicted, labels)
+
+    def save_current_model(self, suffix_for_filename):
+        """
+            Method to save the state_dict of self.model to the path from run_paths_dict.
+
+            Parameters:
+                - suffix_for_filename (str): Suffix to add the to filename (e.g. epoch, ...)
+        """
+        # create save path
+        save_path = os.path.join(
+            self.run_paths_dict["model_ckpts"], f"{self.model._get_name()}_{suffix_for_filename}.pt")
+
+        # save the current state_dict of the model to save_path
+        torch.save(self.model.state_dict(), save_path)
+
+        logging.info(f"Stored current state_dict of the model to '{save_path}'")
