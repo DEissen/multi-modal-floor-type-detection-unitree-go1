@@ -43,7 +43,7 @@ class Trainer():
 
             # create name of run based on current time and number of sensors
             display_name = datetime.datetime.now().strftime(
-                '%d.%m_%H:%M:%S_', model._get_name())
+                '%d.%m_%H:%M:%S_' + model._get_name())
             if len(self.sensors) == 1:
                 display_name += "_unimod"
             else:
@@ -104,7 +104,11 @@ class Trainer():
                 f"\n[Epoch: {epoch_index+1:d}, Step: end] Train confusion matrix:\n{self.train_confusion_matrix.get_result()}")
 
             # save model after each epoch
-            self.save_current_model(epoch_index+1)
+            force_save = False
+            if epoch_index + 1 == self.config_dict["epochs"]:
+                # force save for last epoch
+                force_save = True
+            self.save_current_model(epoch_index+1, force_save)
 
         logging.info('######### Finished training #########')
 
@@ -239,13 +243,20 @@ class Trainer():
                 _, predicted = torch.max(outputs.data, 1)
                 self.val_confusion_matrix.update(predicted, labels)
 
-    def save_current_model(self, suffix_for_filename):
+    def save_current_model(self, suffix_for_filename, force_save):
         """
-            Method to save the state_dict of self.model to the path from run_paths_dict.
+            Method to save the state_dict of self.model to the path from run_paths_dict if the training accuracy
+            is better than 60%. Saving can be enforced by setting force_save to True.
 
             Parameters:
                 - suffix_for_filename (str): Suffix to add the to filename (e.g. epoch, ...)
+                - force_save (bool): Bool to enforce saving of model independent of training accuracy
         """
+        current_train_acc = self.train_confusion_matrix.get_accuracy()
+        if current_train_acc < 0.6 and not force_save:
+            logging.info(f"State_dict not save, as accuracy for training dict is below 60% = not worth it")
+            return
+    
         # create save path
         save_path = os.path.join(
             self.run_paths_dict["model_ckpts"], f"{self.model._get_name()}_{suffix_for_filename}.pt")

@@ -1,13 +1,15 @@
 import torch
-import torchvision.transforms as transforms
+import os
 
 # custom imports
 from FTDDataset.FTDDataset import FloorTypeDetectionDataset
 from unimodal_models.LeNet import LeNet
 from train import Trainer
-from eval import evaluate
+from eval import evaluate, load_state_dict
 from visualization.visualization import visualize_data_sample_or_batch
 from custom_utils.custom_utils import gen_run_dir, start_logger, store_used_config
+
+TRAINING = True
 
 if __name__ == "__main__":
     run_paths_dict = gen_run_dir()
@@ -25,13 +27,13 @@ if __name__ == "__main__":
 
     # config for training
     train_config_dict = {
-        "epochs": 20,
-        "batch_size": 4,
+        "epochs": 15,
+        "batch_size": 8,
         "lr": 0.001,
         "momentum": 0.9,
         "num_classes": 2,
         "use_wandb": True,
-        "visualize_results": False,
+        "visualize_results": True,
         "train_log_interval": 50,
         "sensors": sensors,
         "dataset_path": dataset_path
@@ -58,10 +60,16 @@ if __name__ == "__main__":
     # define model, loss and optimizer
     model = LeNet(train_config_dict["num_classes"])
 
-    # training loop
-    trainer = Trainer(model, ds_train, ds_test, sensors,
-                      train_config_dict, run_paths_dict)
-    trainer.train()
+    if TRAINING == True:
+        # training loop
+        trainer = Trainer(model, ds_train, ds_test, sensors,
+                        train_config_dict, run_paths_dict)
+        trainer.train()
+    else:
+        # optionally load instead of train the model
+        num_ckpt = 6
+        load_path = os.path.join(run_paths_dict["model_ckpts"], f"{model._get_name()}_{num_ckpt}.pt")
+        load_state_dict(model, load_path)
 
     # test loop
     evaluate(model, ds_test, sensors, train_config_dict)
