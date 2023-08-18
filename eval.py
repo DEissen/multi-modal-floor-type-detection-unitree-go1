@@ -36,22 +36,30 @@ def evaluate(model, ds_test, sensors, config_dict):
             # update confusion matrix
             test_confusion_matrix.update(predicted, labels)
 
-    # prepare metrics for logging
-    test_accuracy = test_confusion_matrix.get_accuracy()
-    test_sensitivity = test_confusion_matrix.get_sensitivity()
-    test_specificity = test_confusion_matrix.get_specificity()
+    # prepare metrics for logging)
     if config_dict["num_classes"] == 2:
+        averageing_info_string = ""
+        test_accuracy = test_confusion_matrix.get_accuracy()
+        test_sensitivity = test_confusion_matrix.get_sensitivity()
+        test_specificity = test_confusion_matrix.get_specificity()
         test_balanced_accuracy = test_confusion_matrix.get_balanced_accuracy()
     else:
+        averageing_info_string = "Averaged "
+        test_accuracy = torch.sum(
+            test_confusion_matrix.get_accuracy())
+        test_sensitivity = torch.sum(
+            test_confusion_matrix.get_sensitivity()) / config_dict["num_classes"]
+        test_specificity = torch.sum(
+            test_confusion_matrix.get_specificity()) / config_dict["num_classes"]
         test_balanced_accuracy = torch.sum(
             test_confusion_matrix.get_balanced_accuracy()) / config_dict["num_classes"]
 
     # log metrics to console
     logging_message = [f'\nResults for test set:',
                         f'val acc: {test_accuracy*100:.2f} %',
-                        f'val sensitivity: {test_sensitivity*100:.2f} %',
-                        f'val specificity: {test_specificity*100:.2f} %',
-                        f'val balanced acc: {test_balanced_accuracy*100:.2f} %',
+                        f'{averageing_info_string}val sensitivity: {test_sensitivity*100:.2f} %',
+                        f'{averageing_info_string}val specificity: {test_specificity*100:.2f} %',
+                        f'{averageing_info_string}val balanced acc: {test_balanced_accuracy*100:.2f} %',
                         f'val confusion matrix:\n{test_confusion_matrix.get_result()}']
     logging_message = "\n".join(logging_message)
     logging.info(logging_message)
