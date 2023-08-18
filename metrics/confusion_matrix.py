@@ -73,10 +73,15 @@ class ConfusionMatrix():
         # nan occurs in case of division trough 0, thus nan shall be replaced with 1 which is the maximum value
         sensitivity = torch.nan_to_num(sensitivity, nan=1)
 
-        for index, value in enumerate(tp):
-            if value == 0:
-                # when numerator is zero, nan shall be replaced with 0 instead
-                sensitivity[index] = 0
+        # check whether tp was zero (must be handled differently for binary classification)
+        if self.num_classes > 2:
+            for index, value in enumerate(tp):
+                if value == 0:
+                    # when numerator is zero, nan shall be replaced with 0 instead
+                    sensitivity[index] = 0
+        else:
+            if tp == 0:
+                sensitivity = 0
 
         return sensitivity
 
@@ -88,10 +93,15 @@ class ConfusionMatrix():
         # nan occurs in case of division trough 0, thus nan shall be replaced with 1 which is the maximum value
         specificity = torch.nan_to_num(specificity, nan=1)
 
-        for index, value in enumerate(tn):
-            if value == 0:
-                # when numerator is zero, nan shall be replaced with 0 instead
-                specificity[index] = 0
+        # check whether tn was zero (must be handled differently for binary classification)
+        if self.num_classes > 2:
+            for index, value in enumerate(tn):
+                if value == 0:
+                    # when numerator is zero, nan shall be replaced with 0 instead
+                    specificity[index] = 0
+        else:
+            if tn == 0:
+                specificity = 0
 
         return specificity
 
