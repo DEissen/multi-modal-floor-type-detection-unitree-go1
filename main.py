@@ -3,7 +3,7 @@ import os
 
 # custom imports
 from FTDDataset.FTDDataset import FloorTypeDetectionDataset
-from unimodal_models.LeNet import LeNet
+from models.unimodal_models import LeNet_like, VGG_Like
 from train import Trainer
 from eval import evaluate, load_state_dict
 from visualization.visualization import visualize_data_sample_or_batch
@@ -31,8 +31,9 @@ if __name__ == "__main__":
         "batch_size": 8,
         "lr": 0.001,
         "momentum": 0.9,
+        "dropout_rate": 0.2,
         "num_classes": 2,
-        "use_wandb": True,
+        "use_wandb": False,
         "visualize_results": True,
         "train_log_interval": 50,
         "sensors": sensors,
@@ -58,7 +59,8 @@ if __name__ == "__main__":
     # visualize_data_sample_or_batch(data_for_vis, label_for_vis)
 
     # define model, loss and optimizer
-    model = LeNet(train_config_dict["num_classes"])
+    model = LeNet_like(train_config_dict["num_classes"])
+    # model = VGG_Like(train_config_dict["num_classes"], train_config_dict["dropout_rate"])
 
     if TRAINING == True:
         # training loop
