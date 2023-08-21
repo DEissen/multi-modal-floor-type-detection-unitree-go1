@@ -88,20 +88,23 @@ def visualize_data_sample_or_batch(data_dict, label=None, prediction=None):
 
         # logic for IMU data
         else:
+            # Note: Shape of data in general: B x F x D (B = batch size, F = feature dim, D = data dim)
             # TODO transpose data back to normal shape
             # extract timeseries data
             data_dimension = len(data_dict[sensor].shape)
             if data_dimension == 3:
                 # if data has three dimensions, data is definitely batched -> extract first window of batch
                 imu_data = data_dict[sensor][0].numpy()
+                imu_data = imu_data.transpose((1, 0))
             elif data_dimension == 2:
                 # if data has two dimensions, the data might be 1D data batched or 2D data unbatched
-                if data_dict[sensor].shape[0] < 15:
+                if data_dict[sensor].shape[1] < 15:
                     # if the first dimension is less than 15, it's batched 1D data -> extract first window of batch
                     imu_data = data_dict[sensor][0].numpy()
                 else:
                     # else it's 2D data which is not batched -> window can be directly taken from dict
                     imu_data = data_dict[sensor].numpy()
+                    imu_data = imu_data.transpose((1, 0))
             elif data_dimension == 1:
                 # if data has one dimension, data is definitely not batched -> window can be directly taken from dict
                 imu_data = data_dict[sensor].numpy()
