@@ -11,7 +11,8 @@ from custom_utils.custom_utils import gen_run_dir, start_logger, store_used_conf
 
 TRAINING = True
 
-if __name__ == "__main__":
+
+def main():
     run_paths_dict = gen_run_dir(r"")
     start_logger(run_paths_dict["logs_path"], stream_log=True)
 
@@ -60,11 +61,12 @@ if __name__ == "__main__":
     # visualize_data_sample_or_batch(data_for_vis, label_for_vis)
 
     # define model
-    ### for images
+    # for images
     # model = LeNet_Like(train_config_dict["num_classes"])
-    model = VGG_Like(train_config_dict["num_classes"], train_config_dict["dropout_rate"])
+    model = VGG_Like(
+        train_config_dict["num_classes"], train_config_dict["dropout_rate"])
 
-    ### for IMU data
+    # for IMU data
     # index, (test_sampel, test_label) = next(enumerate(ds_train))
     # num_input_features = test_sampel[sensors[0]].size()[0]
     # model = LeNet_Like1D(train_config_dict["num_classes"], num_input_features)
@@ -72,16 +74,22 @@ if __name__ == "__main__":
     if TRAINING == True:
         # training loop
         trainer = Trainer(model, ds_train, ds_test, sensors,
-                        train_config_dict, run_paths_dict)
+                          train_config_dict, run_paths_dict)
         trainer.train()
     else:
         # optionally load instead of train the model
         num_ckpt = 6
-        load_path = os.path.join(run_paths_dict["model_ckpts"], f"{model._get_name()}_{num_ckpt}.pt")
+        load_path = os.path.join(
+            run_paths_dict["model_ckpts"], f"{model._get_name()}_{num_ckpt}.pt")
         load_state_dict(model, load_path)
 
     # test loop
     evaluate(model, ds_test, sensors, train_config_dict)
 
     # store used config as final step of logging
-    store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict)
+    store_used_config(run_paths_dict, label_mapping_dict,
+                      preprocessing_config_dict, train_config_dict)
+
+
+if __name__ == "__main__":
+    main()
