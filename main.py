@@ -23,12 +23,13 @@ if __name__ == "__main__":
     # list of sensors to use
     # sensors = ['accelerometer', 'BellyCamLeft', 'BellyCamRight', 'bodyHeight', 'ChinCamLeft', 'ChinCamRight', 'footForce', 'footRaiseHeight', 'gyroscope',
     #            'HeadCamLeft', 'HeadCamRight', 'LeftCamLeft', 'LeftCamRight', 'mode', 'RightCamLeft', 'RightCamRight', 'temperature', 'velocity', 'yawSpeed']
-    sensors = ["footForce"]
+    sensors = ["HeadCamLeft"]
 
     # config for training
     train_config_dict = {
-        "epochs": 15,
+        "epochs": 10,
         "batch_size": 4,
+        "optimizer": "adam",
         "lr": 0.001,
         "momentum": 0.9,
         "dropout_rate": 0.2,
@@ -60,13 +61,13 @@ if __name__ == "__main__":
 
     # define model
     ### for images
-    model = LeNet_Like(train_config_dict["num_classes"])
-    # model = VGG_Like(train_config_dict["num_classes"], train_config_dict["dropout_rate"])
+    # model = LeNet_Like(train_config_dict["num_classes"])
+    model = VGG_Like(train_config_dict["num_classes"], train_config_dict["dropout_rate"])
 
     ### for IMU data
-    index, (test_sampel, test_label) = next(enumerate(ds_train))
-    num_input_features = test_sampel[sensors[0]].size()[0]
-    model = LeNet_Like1D(train_config_dict["num_classes"], num_input_features)
+    # index, (test_sampel, test_label) = next(enumerate(ds_train))
+    # num_input_features = test_sampel[sensors[0]].size()[0]
+    # model = LeNet_Like1D(train_config_dict["num_classes"], num_input_features)
 
     if TRAINING == True:
         # training loop

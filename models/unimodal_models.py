@@ -32,9 +32,7 @@ class VGG_Like(nn.Module):
         self.fc2 = nn.Linear(32, 8)
         self.dropout2 = nn.Dropout1d(dropout_rate)
 
-        self.fc3 = nn.Linear(8, num_classes)
-        self.dropout3 = nn.Dropout1d(dropout_rate)
-        self.softmax = nn.Softmax(dim=1)
+        self.fc3 = nn.Linear(32, num_classes)
 
     def forward(self, x):
         x = F.relu(self.conv1_1(x))
@@ -53,13 +51,10 @@ class VGG_Like(nn.Module):
         x = F.relu(self.fc1(x))
         x = self.dropout1(x)
 
-        x = F.relu(self.fc2(x))
-        x = self.dropout2(x)
+        # x = F.relu(self.fc2(x))
+        # x = self.dropout2(x)
 
-        x = F.relu(self.fc3(x))
-        x = self.dropout3(x)
-
-        x = self.softmax(x)
+        x = self.fc3(x)
 
         return x
 
@@ -73,7 +68,6 @@ class LeNet_Like(nn.Module):
         self.fc1 = nn.Linear(16*13*13, 128)
         self.fc2 = nn.Linear(128, 64)
         self.fc3 = nn.Linear(64, num_classes)
-        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -81,7 +75,7 @@ class LeNet_Like(nn.Module):
         x = x.view(-1, 16*13*13)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = self.softmax(self.fc3(x))
+        x = self.fc3(x)
         return x
     
 class LeNet_Like1D(nn.Module):
@@ -93,7 +87,6 @@ class LeNet_Like1D(nn.Module):
         self.fc1 = nn.Linear(16*9, 128)
         self.fc2 = nn.Linear(128, 64)
         self.fc3 = nn.Linear(64, num_classes)
-        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -101,6 +94,6 @@ class LeNet_Like1D(nn.Module):
         x = x.view(-1, 16*9)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = self.softmax(self.fc3(x))
+        x = self.fc3(x)
         return x
 

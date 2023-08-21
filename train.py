@@ -62,8 +62,14 @@ class Trainer():
 
         # initialize loss and optimizer
         self.loss_object = nn.CrossEntropyLoss()
-        self.optimizer = optim.SGD(self.model.parameters(
-        ), lr=config_dict["lr"], momentum=config_dict["momentum"])
+        if self.config_dict["optimizer"].lower() == "adam":
+            self.optimizer = optim.Adam(
+                self.model.parameters(), lr=config_dict["lr"])
+        elif self.config_dict["optimizer"].lower() == "sgd":
+            self.optimizer = optim.SGD(self.model.parameters(
+            ), lr=config_dict["lr"], momentum=config_dict["momentum"])
+        else:
+            raise Exception(f"The optimizer '{self.config_dict['optimizer']}' is not supported!")
 
         # initialize metrics
         self.train_confusion_matrix = ConfusionMatrix(
@@ -254,9 +260,10 @@ class Trainer():
         """
         current_train_acc = self.train_confusion_matrix.get_accuracy()
         if current_train_acc < 0.6 and not force_save:
-            logging.info(f"State_dict not save, as accuracy for training dict is below 60% = not worth it")
+            logging.info(
+                f"State_dict not save, as accuracy for training dict is below 60% = not worth it")
             return
-    
+
         # create save path
         save_path = os.path.join(
             self.run_paths_dict["model_ckpts"], f"{self.model._get_name()}_{suffix_for_filename}.pt")
@@ -264,4 +271,5 @@ class Trainer():
         # save the current state_dict of the model to save_path
         torch.save(self.model.state_dict(), save_path)
 
-        logging.info(f"Stored current state_dict of the model to '{save_path}'")
+        logging.info(
+            f"Stored current state_dict of the model to '{save_path}'")
