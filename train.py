@@ -131,8 +131,7 @@ class Trainer():
             # extract input for uni-modal case
             inputs = data_dict[self.sensors[0]]
         else:
-            # TODO: extract input for multi-modal case
-            pass
+            inputs = data_dict
 
         # zero the parameter gradients
         self.optimizer.zero_grad()
@@ -239,8 +238,7 @@ class Trainer():
                     # extract input for uni-modal case
                     inputs = data_dict[self.sensors[0]]
                 else:
-                    # TODO: extract input for multi-modal case
-                    pass
+                    inputs = data_dict
 
                 # get predicitons
                 outputs = self.model(inputs)

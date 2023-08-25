@@ -4,6 +4,7 @@ import os
 # custom imports
 from FTDDataset.FTDDataset import FloorTypeDetectionDataset
 from models.unimodal_models import LeNet_Like, VGG_Like, LeNet_Like1D
+from models.multimodal_models import LeNet_Like_multimodal
 from train import Trainer
 from eval import evaluate, load_state_dict
 from visualization.visualization import visualize_data_sample_or_batch
@@ -24,11 +25,11 @@ def main():
     # list of sensors to use
     # sensors = ['accelerometer', 'BellyCamLeft', 'BellyCamRight', 'bodyHeight', 'ChinCamLeft', 'ChinCamRight', 'footForce', 'gyroscope',
     #            'HeadCamLeft', 'HeadCamRight', 'LeftCamLeft', 'LeftCamRight', 'mode', 'rpy', 'RightCamLeft', 'RightCamRight', 'velocity', 'yawSpeed']
-    sensors = ["yawSpeed"]
+    sensors = ["BellyCamLeft", "accelerometer"]
 
     # config for training
     train_config_dict = {
-        "epochs": 10,
+        "epochs": 5,
         "batch_size": 4,
         "optimizer": "adam",
         "lr": 0.001,
@@ -61,17 +62,27 @@ def main():
     # visualize_data_sample_or_batch(data_for_vis, label_for_vis)
 
     # define model
-    # for images
+    # ## for images
     # model = LeNet_Like(train_config_dict["num_classes"])
     # model = VGG_Like(
     #     train_config_dict["num_classes"], train_config_dict["dropout_rate"])
 
-    # for IMU data
-    # determine number of input features
-    _, (training_sampel, _) = next(enumerate(ds_train))
-    num_input_features = training_sampel[sensors[0]].size()[0]
-    # define model
-    model = LeNet_Like1D(train_config_dict["num_classes"], num_input_features)
+    # ## for IMU data
+    # # determine number of input features
+    # _, (training_sample, _) = next(enumerate(ds_train))
+    # num_input_features = training_sample[sensors[0]].size()[0]
+    # # define model
+    # model = LeNet_Like1D(train_config_dict["num_classes"], num_input_features)
+    
+    # ## multimodal models
+    # determine number of input features for all timeseries sensors
+    num_input_features_dict = {}
+    for sensor in sensors:
+        if not "Cam" in sensor:
+            _, (training_sample, _) = next(enumerate(ds_train))
+            num_input_features_dict[sensor] = training_sample[sensors[0]].size()[0]
+    # define multimodal model
+    model = LeNet_Like_multimodal(train_config_dict["num_classes"], sensors, num_input_features_dict)
 
     if TRAINING == True:
         # training loop
