@@ -21,6 +21,7 @@ def main():
     dataset_path = r"C:\Users\Dominik\Downloads\FTDD_0.1"
     mapping_filename = "label_mapping_binary.json"
     preprocessing_config_filename = "preprocessing_config.json"
+    faulty_data_creation_config_filename = "faulty_data_creation_config.json"
 
     # list of sensors to use
     # sensors = ['accelerometer', 'BellyCamLeft', 'BellyCamRight', 'bodyHeight', 'ChinCamLeft', 'ChinCamRight', 'footForce', 'gyroscope',
@@ -45,7 +46,7 @@ def main():
 
     # create dataset
     transformed_dataset = FloorTypeDetectionDataset(
-        dataset_path, sensors, mapping_filename, preprocessing_config_filename)
+        dataset_path, sensors, mapping_filename, preprocessing_config_filename, faulty_data_creation_config_filename)
 
     # get all possible config dicts for logging
     label_mapping_dict = transformed_dataset.get_mapping_dict()
