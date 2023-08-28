@@ -37,7 +37,7 @@ def main():
         "momentum": 0.9,
         "dropout_rate": 0.2,
         "num_classes": 2,
-        "use_wandb": False,
+        "use_wandb": True,
         "visualize_results": True,
         "train_log_interval": 50,
         "sensors": sensors,
