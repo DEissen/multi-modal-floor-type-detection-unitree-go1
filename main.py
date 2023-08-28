@@ -81,7 +81,7 @@ def main():
     for sensor in sensors:
         if not "Cam" in sensor:
             _, (training_sample, _) = next(enumerate(ds_train))
-            num_input_features_dict[sensor] = training_sample[sensors[0]].size()[0]
+            num_input_features_dict[sensor] = training_sample[sensor].size()[0]
     # define multimodal model
     model = LeNet_Like_multimodal(train_config_dict["num_classes"], sensors, num_input_features_dict)
 
