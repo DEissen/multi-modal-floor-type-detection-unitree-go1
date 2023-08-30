@@ -18,8 +18,8 @@ def main():
     start_logger(run_paths_dict["logs_path"], stream_log=True)
 
     # variables for dataset and config to use
-    dataset_path = r"C:\Users\Dominik\Downloads\FTDD_0.1"
-    mapping_filename = "label_mapping_binary.json"
+    dataset_path = r"C:\Users\Dominik\Downloads\FTDD_1.0"
+    mapping_filename = "label_mapping_full_dataset.json"
     preprocessing_config_filename = "preprocessing_config.json"
     faulty_data_creation_config_filename = "faulty_data_creation_config.json"
 
@@ -30,16 +30,16 @@ def main():
 
     # config for training
     train_config_dict = {
-        "epochs": 5,
-        "batch_size": 4,
+        "epochs": 2,
+        "batch_size": 8,
         "optimizer": "adam",
         "lr": 0.001,
         "momentum": 0.9,
         "dropout_rate": 0.2,
-        "num_classes": 2,
+        "num_classes": 4,
         "use_wandb": True,
         "visualize_results": True,
-        "train_log_interval": 50,
+        "train_log_interval": 200,
         "sensors": sensors,
         "dataset_path": dataset_path
     }
@@ -53,7 +53,7 @@ def main():
     preprocessing_config_dict = transformed_dataset.get_preprocessing_config()
 
     # split in train and test dataset
-    train_size = int(0.8 * len(transformed_dataset))
+    train_size = int(0.9 * len(transformed_dataset))
     test_size = len(transformed_dataset) - train_size
     ds_train, ds_test = torch.utils.data.random_split(
         transformed_dataset, [train_size, test_size])

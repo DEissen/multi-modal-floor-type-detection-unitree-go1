@@ -159,7 +159,7 @@ class Trainer():
         self.validation_for_logging()
 
         # prepare step and epoch index for logging
-        num_epoch = epoch_index + 1
+        num_epoch = epoch_index
         num_step = step_index + 1
         total_step = (num_epoch*self.steps_per_epoch) + num_step
 
@@ -257,6 +257,8 @@ class Trainer():
                 - force_save (bool): Bool to enforce saving of model independent of training accuracy
         """
         current_train_acc = self.train_confusion_matrix.get_accuracy()
+        if self.config_dict["num_classes"] > 2:
+            current_train_acc = torch.sum(current_train_acc)
         if current_train_acc < 0.6 and not force_save:
             logging.info(
                 f"State_dict not save, as accuracy for training dict is below 60% = not worth it")
