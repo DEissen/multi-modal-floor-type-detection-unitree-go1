@@ -88,7 +88,7 @@ class Trainer():
             if torch.cuda.is_available()
             else "cpu"
         )
-        logging.info(f"Using {device} device")
+        logging.info(f"Using {device} device to train the following model:\n{self.model}")
 
         # outer loop for epochs
         for epoch_index in range(self.config_dict["epochs"]):

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchsummary import summary
 
 class LeNet_Like_multimodal(nn.Module):
     """
@@ -20,6 +21,9 @@ class LeNet_Like_multimodal(nn.Module):
 
         self.sensors = sensors
 
+        self.camera_feature_extractors = nn.ModuleDict()
+        self.timeseries_feature_extractors = nn.ModuleDict()
+
         # variables to calculate number of neurons for classification part
         num_cameras = 0
         num_timeseries = 0
@@ -27,7 +31,7 @@ class LeNet_Like_multimodal(nn.Module):
         for sensor in self.sensors:
             if "Cam" in sensor:
                 num_cameras += 1
-                self.camera_feature_extractor = nn.Sequential(
+                self.camera_feature_extractors[sensor] = nn.Sequential(
                     nn.Conv2d(3, 6, 5),
                     nn.MaxPool2d(2, 2),
                     nn.Conv2d(6, 16, 5),
@@ -36,7 +40,7 @@ class LeNet_Like_multimodal(nn.Module):
             else:
                 num_timeseries += 1
                 # add layers for timeseries feature extractor for this sensor
-                self.timeseries_feature_extractor = nn.Sequential(
+                self.timeseries_feature_extractors[sensor] = nn.Sequential(
                     nn.Conv1d(num_input_features_dict[sensor], 6, 5),
                     nn.MaxPool1d(2),
                     nn.Conv1d(6, 16, 5),
@@ -53,12 +57,24 @@ class LeNet_Like_multimodal(nn.Module):
         )
 
     def multimodal_feature_extractor(self, data_struct):
+        cam_features = []
+        timseries_features = []
+
+        cat_input = []
+
+        # get the result of each feature head
         for sensor in self.sensors:
             if "Cam" in sensor:
-                x = self.camera_feature_extractor(data_struct[sensor])
+                cam_features.append(self.camera_feature_extractors[sensor](data_struct[sensor]))
             else:
-                y = self.timeseries_feature_extractor(data_struct[sensor])
-        x = torch.cat((x.view(x.size(0), -1), y.view(y.size(0), -1)), dim=1)
+                timseries_features.append(self.timeseries_feature_extractors[sensor](data_struct[sensor]))
+
+        for cam_feature in cam_features:
+            cat_input.append(cam_feature.view(cam_feature.size(0), -1))
+        for timseries_feature in timseries_features:
+            cat_input.append(timseries_feature.view(timseries_feature.size(0), -1))
+
+        x = torch.cat(cat_input, dim=1)
         return x
 
     def forward(self, data_struct):
