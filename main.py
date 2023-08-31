@@ -26,7 +26,7 @@ def main():
     # list of sensors to use
     # sensors = ['accelerometer', 'BellyCamLeft', 'BellyCamRight', 'bodyHeight', 'ChinCamLeft', 'ChinCamRight', 'footForce', 'gyroscope',
     #            'HeadCamLeft', 'HeadCamRight', 'LeftCamLeft', 'LeftCamRight', 'mode', 'rpy', 'RightCamLeft', 'RightCamRight', 'velocity', 'yawSpeed']
-    sensors = ["BellyCamLeft", "accelerometer"]
+    sensors = ["BellyCamLeft", "HeadCamLeft", "accelerometer", "footForce", "gyroscope", "LeftCamRight", "RightCamRight"]
 
     # config for training
     train_config_dict = {
@@ -59,7 +59,7 @@ def main():
         transformed_dataset, [train_size, test_size])
 
     # # visualize sample from dataset for testing
-    # data_for_vis, label_for_vis = ds_train.__getitem__(0)
+    # data_for_vis, label_for_vis = transformed_dataset.__getitem__(0)
     # visualize_data_sample_or_batch(data_for_vis, label_for_vis)
 
     # define model
@@ -70,7 +70,7 @@ def main():
 
     # ## for IMU data
     # # determine number of input features
-    # _, (training_sample, _) = next(enumerate(ds_train))
+    # _, (training_sample, _) = next(enumerate(transformed_dataset))
     # num_input_features = training_sample[sensors[0]].size()[0]
     # # define model
     # model = LeNet_Like1D(train_config_dict["num_classes"], num_input_features)
@@ -80,10 +80,10 @@ def main():
     num_input_features_dict = {}
     for sensor in sensors:
         if not "Cam" in sensor:
-            _, (training_sample, _) = next(enumerate(ds_train))
+            _, (training_sample, _) = next(enumerate(transformed_dataset))
             num_input_features_dict[sensor] = training_sample[sensor].size()[0]
     # define multimodal model
-    model = LeNet_Like_multimodal(train_config_dict["num_classes"], sensors, num_input_features_dict)
+    model = LeNet_Like_multimodal(train_config_dict["num_classes"], sensors, num_input_features_dict, train_config_dict["dropout_rate"])
 
     if TRAINING == True:
         # training loop
@@ -92,7 +92,7 @@ def main():
         trainer.train()
     else:
         # optionally load instead of train the model
-        num_ckpt = 6
+        num_ckpt = 2
         load_path = os.path.join(
             run_paths_dict["model_ckpts"], f"{model._get_name()}_{num_ckpt}.pt")
         load_state_dict(model, load_path)
