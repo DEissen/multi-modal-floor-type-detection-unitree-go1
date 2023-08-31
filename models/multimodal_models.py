@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchsummary import summary
 
 
 class LeNet_Like_multimodal(nn.Module):
@@ -58,8 +57,10 @@ class LeNet_Like_multimodal(nn.Module):
         self.classification_layers = nn.Sequential(
             nn.Linear(self.neurons_for_cameras +
                       self.neurons_for_timeseries, 128),
+            nn.ReLU(),
             nn.Dropout1d(dropout_rate),
             nn.Linear(128, 64),
+            nn.ReLU(),
             nn.Dropout1d(dropout_rate),
             nn.Linear(64, num_classes)
         )
