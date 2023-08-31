@@ -89,7 +89,6 @@ class Trainer():
             else "cpu"
         )
         logging.info(f"Using {device} device to train the following model:\n{self.model}")
-        self.model.to(device)
 
         # outer loop for epochs
         for epoch_index in range(self.config_dict["epochs"]):

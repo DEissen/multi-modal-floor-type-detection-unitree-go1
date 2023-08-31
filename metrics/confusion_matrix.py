@@ -18,24 +18,16 @@ class ConfusionMatrix():
 
     def __init__(self, num_classes):
         self.num_classes = num_classes
-
-        self.device = (
-            "cuda"
-            if torch.cuda.is_available()
-            else
-             "cpu"
-        )
-
-        self.confmatrix = MulticlassConfusionMatrix(self.num_classes).to(self.device)
+        self.confmatrix = MulticlassConfusionMatrix(self.num_classes)
 
     def reset(self):
-        self.confmatrix = MulticlassConfusionMatrix(self.num_classes).to(self.device)
+        self.confmatrix = MulticlassConfusionMatrix(self.num_classes)
 
     def update(self, pred, labels):
         self.confmatrix(pred, labels)
 
     def get_result(self):
-        return self.confmatrix.compute().cpu().numpy()
+        return self.confmatrix.compute().numpy()
 
     def get_tp_tn_fn_fp_total(self):
         conf_matrix = self.confmatrix.compute()
