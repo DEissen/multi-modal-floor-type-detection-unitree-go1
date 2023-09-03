@@ -88,7 +88,7 @@ class Trainer():
             if torch.cuda.is_available()
             else "cpu"
         )
-        logging.info(f"Using {device} device")
+        logging.info(f"Using {device} device to train the following model:\n{self.model}")
 
         # outer loop for epochs
         for epoch_index in range(self.config_dict["epochs"]):
@@ -107,7 +107,7 @@ class Trainer():
 
             # log current results of the confusion matrix for the training dataset for this epoch
             logging.info(
-                f"\n[Epoch: {epoch_index+1:d}, Step: end] Train confusion matrix:\n{self.train_confusion_matrix.get_result()}")
+                f"\n[Epoch: {epoch_index:d}, Step: end] Train confusion matrix:\n{self.train_confusion_matrix.get_result()}")
 
             # save model after each epoch
             force_save = False
@@ -131,8 +131,7 @@ class Trainer():
             # extract input for uni-modal case
             inputs = data_dict[self.sensors[0]]
         else:
-            # TODO: extract input for multi-modal case
-            pass
+            inputs = data_dict
 
         # zero the parameter gradients
         self.optimizer.zero_grad()
@@ -160,7 +159,7 @@ class Trainer():
         self.validation_for_logging()
 
         # prepare step and epoch index for logging
-        num_epoch = epoch_index + 1
+        num_epoch = epoch_index
         num_step = step_index + 1
         total_step = (num_epoch*self.steps_per_epoch) + num_step
 
@@ -239,8 +238,7 @@ class Trainer():
                     # extract input for uni-modal case
                     inputs = data_dict[self.sensors[0]]
                 else:
-                    # TODO: extract input for multi-modal case
-                    pass
+                    inputs = data_dict
 
                 # get predicitons
                 outputs = self.model(inputs)
@@ -259,6 +257,8 @@ class Trainer():
                 - force_save (bool): Bool to enforce saving of model independent of training accuracy
         """
         current_train_acc = self.train_confusion_matrix.get_accuracy()
+        if self.config_dict["num_classes"] > 2:
+            current_train_acc = torch.sum(current_train_acc)
         if current_train_acc < 0.6 and not force_save:
             logging.info(
                 f"State_dict not save, as accuracy for training dict is below 60% = not worth it")

@@ -26,8 +26,7 @@ def evaluate(model, ds_test, sensors, config_dict):
                 # extract input for uni-modal case
                 inputs = data_dict[sensors[0]]
             else:
-                # TODO: extract input for multi-modal case
-                pass
+                inputs = data_dict
             
             # get predictions
             outputs = model(inputs)
