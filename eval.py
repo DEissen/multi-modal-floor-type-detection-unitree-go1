@@ -10,6 +10,16 @@ from visualization.visualization import visualize_data_sample_or_batch
 
 
 def evaluate(model, ds_test, sensors, config_dict):
+    """
+        Function to evaluate the provided model with ds_test including visualization of one prediction.
+        Details about present sensors in dataset must be provided in the sensors list.
+
+        Parameters:
+            - model (torch.nn): Model which shall be trained
+            - ds_test (torch.utils.data.Dataset): Dataset to use for testing
+            - sensors (list): List containing all sensors which are present in the datasets
+            - config_dict (dict): Dict containing the configuration for the testing
+    """
     # initialize confusion matrix
     test_confusion_matrix = ConfusionMatrix(config_dict["num_classes"])
 
