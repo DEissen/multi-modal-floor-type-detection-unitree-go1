@@ -33,8 +33,8 @@ This module contains the used model architectures.
     - *multimodal_models.py:* Contains a class to create a multimodal model with two or more sensors from the FTD Dataset as input.
     - *unimodal_models.py:* Contains two models for images and one model for timeseries data as input.
 - **visualization/** \
-This module contains a file with an adaptive visualization function for different kinds of data.
-    - *visualization.py:* Contains a function to plot data (as sample or batch) from uni or multi-modal FloorTypeDetectionDataset.
+This module contains a file different visualization functions.
+    - *visualization.py:* Contains a function to plot data (as sample or batch) from uni or multi-modal FloorTypeDetectionDataset as well as a function to visualize the weights of the first classification layer from a model.
 - *eval.py*: Contains a function to evaluate a trained model.
 - *main.py*: Main program to start training and/ or evaluation of a model
 - *README.md*: The file you are reading right now :)
