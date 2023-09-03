@@ -136,3 +136,63 @@ def visualize_data_sample_or_batch(data_dict, label=None, prediction=None):
         plt.suptitle(f"Ground Truth = {label}", fontsize=18)
 
     plt.show()
+
+def visualize_weights_of_dense_layer(trained_model, sensors, split_plot_for_each_sensor=True):
+    """
+        Function to visualize the weights of the first dense layer either split for each sensor or in one graph.
+
+        Parameters:
+            - trained_model (torch.nn): Model with trained weights which shall be visualized
+            - sensors (list): List containing all sensors which are present as feature extractors in the model
+            - split_plot_for_each_sensor (bool): Default = True. Select whether one big plot shall be shown (False) or whether
+                                                 subplots for each feature extractor shall be shown (True)
+    """
+    #extract state dict
+    params_dict = trained_model.state_dict()
+
+    weights = params_dict["classification_layers.0.weight"].numpy()
+    biases = params_dict["classification_layers.0.bias"]
+
+    # needed infos about feature shape
+    flatten_length_cam_feature = 16 * 13 ** 2
+    flatten_length_IMU_feature = 16 * 9
+
+    # normalize weights
+    min_val = np.min(weights)
+    norm_weights = weights - min_val
+    max_val = np.max(norm_weights)
+    norm_weights = norm_weights / max_val
+
+    if split_plot_for_each_sensor:
+        # extract weights for layers
+        weights = norm_weights
+        extracted_weights = []
+        current_pos = 0
+        for sensor in sensors:
+            if "Cam" in sensor:
+                new_pos = (current_pos+flatten_length_cam_feature)
+                extracted_weights.append(weights[:, current_pos:new_pos])
+                current_pos = new_pos
+            else:
+                new_pos = (current_pos+flatten_length_IMU_feature)
+                extracted_weights.append(weights[:, current_pos:new_pos])
+                current_pos = new_pos
+
+        # create plot
+        rows = 3
+        columns =3
+        fig = plt.figure(figsize=(20, 20))
+        ax = []
+
+        # add all subplots
+        for index, cur_weight in enumerate(extracted_weights):
+            # add next subplot and title
+            ax.append(fig.add_subplot(rows, columns, index+1))
+            ax[-1].set_title(sensors[index])
+            plt.imshow(cur_weight.transpose(1,0), cmap="viridis", vmin=0, vmax = 1, interpolation="none")
+
+    else:
+        # complete plot (usually to big to be interpretable)
+        plt.imshow(params_dict["classification_layers.0.weight"].numpy(), cmap="viridis", interpolation="nearest")
+
+    plt.show()

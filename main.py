@@ -7,7 +7,7 @@ from models.unimodal_models import LeNet_Like, VGG_Like, LeNet_Like1D
 from models.multimodal_models import LeNet_Like_multimodal
 from train import Trainer
 from eval import evaluate, load_state_dict
-from visualization.visualization import visualize_data_sample_or_batch
+from visualization.visualization import visualize_data_sample_or_batch, visualize_weights_of_dense_layer
 from custom_utils.custom_utils import gen_run_dir, start_logger, store_used_config
 
 TRAINING = True
@@ -96,6 +96,9 @@ def main():
         load_path = os.path.join(
             run_paths_dict["model_ckpts"], f"{model._get_name()}_{num_ckpt}.pt")
         load_state_dict(model, load_path)
+
+        # uncomment if you want to see a visualization of the weights of the first Dense Layer
+        # visualize_weights_of_dense_layer(model, sensors, False)
 
     # test loop
     evaluate(model, ds_test, sensors, train_config_dict)
