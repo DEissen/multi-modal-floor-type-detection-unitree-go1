@@ -107,7 +107,7 @@ class Trainer():
 
             # log current results of the confusion matrix for the training dataset for this epoch
             logging.info(
-                f"\n[Epoch: {epoch_index+1:d}, Step: end] Train confusion matrix:\n{self.train_confusion_matrix.get_result()}")
+                f"\n[Epoch: {epoch_index:d}, Step: end] Train confusion matrix:\n{self.train_confusion_matrix.get_result()}")
 
             # save model after each epoch
             force_save = False
