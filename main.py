@@ -13,6 +13,18 @@ from custom_utils.custom_utils import gen_run_dir, start_logger, store_used_conf
 
 
 def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=None):
+    """
+        Main function for training and evaluation of unimodal and multimodal models for the FTD dataset.
+        Most important config parameters must be changed in the function itself, as this function is the core of the framework.
+        There are a few function parameters to enable execution of subsequent runs with the same config for different sensors, ...
+
+        Parameters:
+            - perform_training (bool): Boolean that determines whether model is newly trained or whether checkpoint shall be restored.
+                                       NOTE: If set to False, there must be a path provided in parameter run_path where a checkpoint is present!
+            - sensors (list): List of sensors to use from the FTD dataset and for the model. Based on this the model architecture will be selected (either unimodal or multimodal)
+            - run_path (str): Path to files stored from a previous run for loading a checkpoint, ...
+            - num_ckpt_to_load (int): Number of the checkpoint to restore from run_path. If None is provided, the last element of the sorted file list will be taken.
+    """
     # ####### configurable parameters #######
     # ### variables for dataset config
     dataset_path = r"C:\Users\Dominik\Downloads\FTDD_1.0"
@@ -84,8 +96,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     elif "Cam" in sensors[0]:
         # for images
         model = LeNet_Like(train_config_dict["num_classes"])
-        # model = VGG_Like(
-        #     train_config_dict["num_classes"], train_config_dict["dropout_rate"])
+        # model = VGG_Like(train_config_dict["num_classes"], train_config_dict["dropout_rate"])
 
     # ## unimodal model for timeseries data in remaining case
     else:
