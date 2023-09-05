@@ -9,10 +9,10 @@ from models.multimodal_models import LeNet_Like_multimodal
 from train import Trainer
 from eval import evaluate, load_state_dict
 from visualization.visualization import visualize_data_sample_or_batch, visualize_weights_of_dense_layer
-from custom_utils.custom_utils import gen_run_dir, start_logger, store_used_config
+from custom_utils.custom_utils import gen_run_dir, CustomLogger, store_used_config
 
 
-def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=None):
+def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=None, logger=None):
     """
         Main function for training and evaluation of unimodal and multimodal models for the FTD dataset.
         Most important config parameters must be changed in the function itself, as this function is the core of the framework.
@@ -24,6 +24,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
             - sensors (list): List of sensors to use from the FTD dataset and for the model. Based on this the model architecture will be selected (either unimodal or multimodal)
             - run_path (str): Path to files stored from a previous run for loading a checkpoint, ...
             - num_ckpt_to_load (int): Number of the checkpoint to restore from run_path. If None is provided, the last element of the sorted file list will be taken.
+            - logger (CustomLogger): Instance of custom logger class which must be provided in case main() is called multiple times by another function/program to prevent multiple logging
     """
     # ####### configurable parameters #######
     # ### variables for dataset config
@@ -48,7 +49,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
         "dropout_rate": 0.2,
         "num_classes": 4,
         "use_wandb": True,
-        "visualize_results": True,
+        "visualize_results": False,
         "train_log_interval": 200,
         "sensors": sensors,
         "dataset_path": dataset_path
@@ -56,7 +57,11 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
 
     # ####### start of program (only modify code below if you want to change some behavior) #######
     run_paths_dict = gen_run_dir(run_path)
-    start_logger(run_paths_dict["logs_path"], stream_log=True)
+    # create new logger object if non was provided
+    if logger == None:
+        logger = CustomLogger()
+
+    logger.start_logger(run_paths_dict["logs_path"], stream_log=True)
 
     # ####### prepare dataset and load config #######
     # create dataset
@@ -141,6 +146,20 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     store_used_config(run_paths_dict, label_mapping_dict,
                       preprocessing_config_dict, train_config_dict)
 
+
+def complete_unimodal_test():
+    perform_training=True
+    run_path=r""
+    num_ckpt_to_load=None
+    logger = CustomLogger()
+
+    # list of sensors to use
+    sensors = ['accelerometer', 'BellyCamLeft', 'BellyCamRight', 'bodyHeight', 'ChinCamLeft', 'ChinCamRight', 'footForce', 'gyroscope',
+            'HeadCamLeft', 'HeadCamRight', 'LeftCamLeft', 'LeftCamRight', 'mode', 'RightCamLeft', 'RightCamRight', 'rpy', 'velocity', 'yawSpeed']
+
+    for sensor in sensors:
+        sensor = [sensor]
+        main(perform_training, sensor, run_path, num_ckpt_to_load, logger)
 
 if __name__ == "__main__":
     main()

@@ -4,6 +4,7 @@ import logging
 import json
 import os.path as path
 
+
 def gen_run_dir(present_run_path=""):
     """
         Creates the run_paths_dict dictionary with all relevant paths for logging, storing of
@@ -58,35 +59,53 @@ def gen_run_dir(present_run_path=""):
     return run_paths_dict
 
 
-def start_logger(log_dir_path, logging_level=0, stream_log=False):
+class CustomLogger():
     """
-        Create logger to log all printed output of the run.
-
-        Parameters:
-            - log_dir_path (str): Path to dir where the log file shall be stored
-            - logging_level (int): Logging level to be assigned to the logger (e.g. DEBUG, INFO,...)
-            - stream_log (bool): boolean flag for plotting to console or not
+        CustomLogger class necessary to handle logging.Handler objects in case of multiple runs (to stop logging to previous runs).
     """
-    # create log file
-    log_file_path = os.path.join(log_dir_path, "run.log")
-    with open(log_file_path, "a"):
-        pass
 
-    # create std logger
-    logger = logging.getLogger()
-    logger.setLevel(logging_level)
+    def __init__(self, logging_level=0):
+        """
+            Init method which creates the std logger
 
-    # add logging to file
-    file_handler = logging.FileHandler(log_file_path)
-    logger.addHandler(file_handler)
+            Parameters:
+                - logging_level (int): Logging level to be assigned to the logger (e.g. DEBUG, INFO,...)
+        """
+        # create std logger
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging_level)
 
-    # plot to console if wanted
-    if stream_log:
-        stream_handler = logging.StreamHandler()
-        logger.addHandler(stream_handler)
+        # disable matplotlib font_manager logging as it's not needed
+        logging.getLogger('matplotlib.font_manager').disabled = True
 
-    # disable matplotlib font_manager logging as it's not needed
-    logging.getLogger('matplotlib.font_manager').disabled = True
+    def start_logger(self, log_dir_path, stream_log=False):
+        """
+            Update logger to stream/ save logging to file and stream and potentially remove old Handlers (from previous runs).
+
+            Parameters:
+                - log_dir_path (str): Path to dir where the log file shall be stored
+                - stream_log (bool): boolean flag for plotting to console or not
+        """
+        # remove previous handlers if some are already present
+        if self.logger.hasHandlers():
+            self.logger.removeHandler(self.file_handler)
+            if stream_log:
+                self.logger.removeHandler(self.stream_handler)
+
+        # create log file
+        log_file_path = os.path.join(log_dir_path, "run.log")
+        with open(log_file_path, "a"):
+            pass
+
+        # add logging to file
+        self.file_handler = logging.FileHandler(log_file_path)
+        self.logger.addHandler(self.file_handler)
+
+        # plot to console if wanted
+        if stream_log:
+            self.stream_handler = logging.StreamHandler()
+            self.logger.addHandler(self.stream_handler)
+
 
 def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict):
     """
@@ -98,9 +117,12 @@ def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_d
             - preprocessing_config_dict (dict): Dict containing preprocessing config of this run
             - train_config_dict (dict): Dict containing training config of this run
     """
-    label_mapping_config_path = path.join(run_paths_dict["config_path"], "label_mapping_config.json")
-    preprocessing_config_path =  path.join(run_paths_dict["config_path"], "preprocessing_config.json")
-    train_config_path =  path.join(run_paths_dict["config_path"], "train_config.json")
+    label_mapping_config_path = path.join(
+        run_paths_dict["config_path"], "label_mapping_config.json")
+    preprocessing_config_path = path.join(
+        run_paths_dict["config_path"], "preprocessing_config.json")
+    train_config_path = path.join(
+        run_paths_dict["config_path"], "train_config.json")
 
     save_struct_as_json(label_mapping_config_path, label_mapping_dict)
     save_struct_as_json(preprocessing_config_path, preprocessing_config_dict)
