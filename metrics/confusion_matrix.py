@@ -81,10 +81,10 @@ class ConfusionMatrix():
 
     def get_accuracy(self):
         """
-            Method to get the accuracy for all classes.
+            Method to get the accuracy.
 
             Returns:
-                - accuracy (torch.Tensor): Tensor with accuracy for each class (single number in case of self.num_classes == 2)
+                - accuracy (torch.Tensor): Tensor with accuracy (single number)
         """
         tp, tn, fn, fp, total = self.get_tp_tn_fn_fp_total()
 
@@ -94,9 +94,8 @@ class ConfusionMatrix():
             correct = tp
 
         accuracy = correct / total
-
-        if self.num_classes == 2:
-            accuracy = torch.sum(accuracy)
+        
+        accuracy = torch.sum(accuracy)
 
         return accuracy
 
