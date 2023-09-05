@@ -1,6 +1,7 @@
 import torch
 import os
 import glob
+from random import shuffle, randint
 
 # custom imports
 from FTDDataset.FTDDataset import FloorTypeDetectionDataset
@@ -41,7 +42,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
 
     # ### config for training
     train_config_dict = {
-        "epochs": 2,
+        "epochs": 10,
         "batch_size": 8,
         "optimizer": "adam",
         "lr": 0.001,
@@ -161,7 +162,28 @@ def complete_unimodal_test():
         sensor = [sensor]
         main(perform_training, sensor, run_path, num_ckpt_to_load, logger)
 
+def test_random_multimodal_models(number_of_runs):
+    perform_training=True
+    run_path=r""
+    num_ckpt_to_load=None
+    logger = CustomLogger()
+
+    # run training for number_of_runs times with random subset of sensors
+    for i in range(number_of_runs):
+        # reinitialize list for each run
+        sensors = ['accelerometer', 'BellyCamLeft', 'BellyCamRight', 'bodyHeight', 'ChinCamLeft', 'ChinCamRight', 'footForce', 'gyroscope',
+                'HeadCamLeft', 'HeadCamRight', 'LeftCamLeft', 'LeftCamRight', 'mode', 'RightCamLeft', 'RightCamRight', 'rpy', 'velocity', 'yawSpeed']
+        # shuffle full list
+        shuffle(sensors)
+        # get random number of sensors (at least 2 and max 1/3 of sensors to keep it short)
+        num_of_sensors = randint(2, len(sensors)/3)
+
+        sensors = sensors[:num_of_sensors]
+        main(perform_training, sensors, run_path, num_ckpt_to_load, logger)
+
+
 if __name__ == "__main__":
     # ### uncomment function which you want to use (default is main())
     main()
     # complete_unimodal_test()
+    # test_random_multimodal_models(10)
