@@ -37,15 +37,19 @@ class Trainer():
         self.log_interval = self.config_dict["train_log_interval"]
         self.run_paths_dict = run_paths_dict
 
+        # member for early stopping detection
+        self.best_accuracy = 0
+        self.early_stopping_counter = 0
+
         # login to Weights & Biases
         if self.config_dict["use_wandb"]:
             wandb.login()
 
             # create name of run based on current time and number of sensors
             display_name = datetime.datetime.now().strftime(
-                '%d.%m_%H:%M:%S_' + model._get_name())
+                '%d.%m_%H:%M:%S')
             if len(self.sensors) == 1:
-                display_name += "_unimod"
+                display_name += f"_{self.sensors[0]}"
             else:
                 display_name += "_multimod"
 
@@ -116,7 +120,24 @@ class Trainer():
                 force_save = True
             self.save_current_model(epoch_index+1, force_save)
 
+            # ### check for early stopping
+            accuracy = self.train_confusion_matrix.get_accuracy()
+
+            # check for increased performance
+            if self.best_accuracy < (accuracy - 0.05):
+                self.best_accuracy = accuracy
+                self.early_stopping_counter = 0
+            else: 
+                self.early_stopping_counter += 1
+
+            if self.early_stopping_counter == 2 and self.best_accuracy > 0.8:
+                logging.info("Accuracy did not increase by at 5% in the last two epochs and is above 80%, thus training will be stopped now!")
+                logging.info('######### Finished training #########')
+                wandb.finish()
+                return
+
         logging.info('######### Finished training #########')
+        wandb.finish()
 
     def train_step(self, data_dict, labels):
         """
@@ -178,16 +199,14 @@ class Trainer():
             val_balanced_accuracy = self.val_confusion_matrix.get_balanced_accuracy()
         else:
             averageing_info_string = "Averaged "
-            train_accuracy = torch.sum(
-                self.train_confusion_matrix.get_accuracy())
+            train_accuracy = self.train_confusion_matrix.get_accuracy()
             train_sensitivity = torch.sum(
                 self.train_confusion_matrix.get_sensitivity()) / self.config_dict["num_classes"]
             train_specificity = torch.sum(
                 self.train_confusion_matrix.get_specificity()) / self.config_dict["num_classes"]
             train_balanced_accuracy = torch.sum(
                 self.train_confusion_matrix.get_balanced_accuracy()) / self.config_dict["num_classes"]
-            val_accuracy = torch.sum(
-                self.val_confusion_matrix.get_accuracy())
+            val_accuracy = self.val_confusion_matrix.get_accuracy()
             val_sensitivity = torch.sum(
                 self.val_confusion_matrix.get_sensitivity()) / self.config_dict["num_classes"]
             val_specificity = torch.sum(
@@ -257,8 +276,7 @@ class Trainer():
                 - force_save (bool): Bool to enforce saving of model independent of training accuracy
         """
         current_train_acc = self.train_confusion_matrix.get_accuracy()
-        if self.config_dict["num_classes"] > 2:
-            current_train_acc = torch.sum(current_train_acc)
+
         if current_train_acc < 0.6 and not force_save:
             logging.info(
                 f"State_dict not save, as accuracy for training dict is below 60% = not worth it")
