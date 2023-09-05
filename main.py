@@ -162,4 +162,6 @@ def complete_unimodal_test():
         main(perform_training, sensor, run_path, num_ckpt_to_load, logger)
 
 if __name__ == "__main__":
+    # ### uncomment function which you want to use (default is main())
     main()
+    # complete_unimodal_test()

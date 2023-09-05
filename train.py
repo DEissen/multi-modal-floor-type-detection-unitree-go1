@@ -117,6 +117,7 @@ class Trainer():
             self.save_current_model(epoch_index+1, force_save)
 
         logging.info('######### Finished training #########')
+        wandb.finish()
 
     def train_step(self, data_dict, labels):
         """
