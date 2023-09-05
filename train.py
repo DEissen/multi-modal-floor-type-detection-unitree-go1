@@ -43,9 +43,9 @@ class Trainer():
 
             # create name of run based on current time and number of sensors
             display_name = datetime.datetime.now().strftime(
-                '%d.%m_%H:%M:%S_' + model._get_name())
+                '%d.%m_%H:%M:%S')
             if len(self.sensors) == 1:
-                display_name += "_unimod"
+                display_name += f"_{self.sensors[0]}"
             else:
                 display_name += "_multimod"
 
