@@ -77,6 +77,8 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     if perform_training:
         train_size = int(0.9 * len(transformed_dataset))
     else:
+        # current implementation: use whole dataset for evaluation in case of preform_training == False
+        # Idea: Use different dataset from other measurements for testing
         train_size = 0
 
     test_size = len(transformed_dataset) - train_size
