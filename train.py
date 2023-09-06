@@ -65,7 +65,8 @@ class Trainer():
         self.steps_per_epoch = int(len(ds_train)/config_dict["batch_size"])
 
         # initialize loss and optimizer
-        self.loss_object = nn.CrossEntropyLoss()
+        self.train_loss_object = nn.CrossEntropyLoss()
+        self.val_loss_object = nn.CrossEntropyLoss()
         if self.config_dict["optimizer"].lower() == "adam":
             self.optimizer = optim.Adam(
                 self.model.parameters(), lr=config_dict["lr"])
@@ -165,7 +166,7 @@ class Trainer():
 
         # forward + backward + optimize
         outputs = self.model(inputs)
-        loss = self.loss_object(outputs, labels)
+        loss = self.train_loss_object(outputs, labels)
         loss.backward()
         self.optimizer.step()
 
@@ -223,11 +224,12 @@ class Trainer():
         # log metrics to console/ logging file
         # create logging message by list for better readability and easier way to add new messages
         logging_message = [f'\n[Epoch: {num_epoch:d}, Step: {num_step:5d}]:',
-                           f'loss: {self.train_loss:.3f}',
+                           f'train loss: {self.train_loss:.3f}',
                            f'train acc: {train_accuracy*100:.2f} %',
                            f'{averageing_info_string}train sensitivity: {train_sensitivity*100:.2f} %',
                            f'{averageing_info_string}train specificity: {train_specificity*100:.2f} %',
                            f'{averageing_info_string}train balanced acc: {train_balanced_accuracy*100:.2f} %',
+                           f'val loss: {self.val_loss:.3f}',
                            f'val acc: {val_accuracy*100:.2f} %',
                            f'{averageing_info_string}val sensitivity: {val_sensitivity*100:.2f} %',
                            f'{averageing_info_string}val specificity: {val_specificity*100:.2f} %',
@@ -243,6 +245,7 @@ class Trainer():
                        "Train/sensitivity": train_sensitivity,
                        "Train/specificity": train_specificity,
                        "Train/balanced_acc": train_balanced_accuracy,
+                       "Val/loss": self.val_loss,
                        "Val/acc": val_accuracy,
                        "Val/sensitivity": val_sensitivity,
                        "Val/specificity": val_specificity,
@@ -259,6 +262,9 @@ class Trainer():
         # set model to eval mode for correct behavior of dropout and BN layers
         self.model.eval()
 
+        # reset validation loss
+        self.val_loss = 0
+
         with torch.no_grad():
             for (data_dict, labels) in self.ds_val_loader:
                 # prepare data_dict for model
@@ -271,9 +277,15 @@ class Trainer():
                 # get predicitons
                 outputs = self.model(inputs)
 
+                # add loss of batch to validation loss
+                self.val_loss += self.val_loss_object(outputs, labels)
+
                 # update metrics
                 _, predicted = torch.max(outputs.data, 1)
                 self.val_confusion_matrix.update(predicted, labels)
+        
+        # calculate average validation loss
+        self.val_loss = self.val_loss / len(self.ds_val_loader)
 
         # set model back to training at the end of validation for further training
         self.model.train()
