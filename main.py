@@ -103,7 +103,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     # ## unimodal model for images if "Cam" in the sensor name
     elif "Cam" in sensors[0]:
         # for images
-        model = LeNet_Like(train_config_dict["num_classes"])
+        model = LeNet_Like(train_config_dict["num_classes"], train_config_dict["dropout_rate"])
         # model = VGG_Like(train_config_dict["num_classes"], train_config_dict["dropout_rate"])
 
     # ## unimodal model for timeseries data in remaining case
@@ -114,7 +114,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
 
         # define model
         model = LeNet_Like1D(
-            train_config_dict["num_classes"], num_input_features)
+            train_config_dict["num_classes"], num_input_features, train_config_dict["dropout_rate"])
 
     # ####### start training if selected, otherwise load stored model #######
     if perform_training:
