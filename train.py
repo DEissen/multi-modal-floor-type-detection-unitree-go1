@@ -73,7 +73,8 @@ class Trainer():
             self.optimizer = optim.SGD(self.model.parameters(
             ), lr=config_dict["lr"], momentum=config_dict["momentum"])
         else:
-            raise Exception(f"The optimizer '{self.config_dict['optimizer']}' is not supported!")
+            raise Exception(
+                f"The optimizer '{self.config_dict['optimizer']}' is not supported!")
 
         # initialize metrics
         self.train_confusion_matrix = ConfusionMatrix(
@@ -92,7 +93,11 @@ class Trainer():
             if torch.cuda.is_available()
             else "cpu"
         )
-        logging.info(f"Using {device} device to train the following model:\n{self.model}")
+        logging.info(
+            f"Using {device} device to train the following model:\n{self.model}")
+
+        # set model to training mode to be sure dropout and BN layers work as expected
+        self.model.train()
 
         # outer loop for epochs
         for epoch_index in range(self.config_dict["epochs"]):
@@ -127,11 +132,12 @@ class Trainer():
             if self.best_accuracy < (accuracy - 0.05):
                 self.best_accuracy = accuracy
                 self.early_stopping_counter = 0
-            else: 
+            else:
                 self.early_stopping_counter += 1
 
             if self.early_stopping_counter == 2 and self.best_accuracy > 0.8:
-                logging.info("Accuracy did not increase by at 5% in the last two epochs and is above 80%, thus training will be stopped now!")
+                logging.info(
+                    "Accuracy did not increase by at 5% in the last two epochs and is above 80%, thus training will be stopped now!")
                 logging.info('######### Finished training #########')
                 wandb.finish()
                 return
@@ -250,6 +256,9 @@ class Trainer():
         """
             Method to evaluate model for whole validation dataset and update results in self.val_confusion_matrix.
         """
+        # set model to eval mode for correct behavior of dropout and BN layers
+        self.model.eval()
+
         with torch.no_grad():
             for (data_dict, labels) in self.ds_val_loader:
                 # prepare data_dict for model
@@ -265,6 +274,9 @@ class Trainer():
                 # update metrics
                 _, predicted = torch.max(outputs.data, 1)
                 self.val_confusion_matrix.update(predicted, labels)
+
+        # set model back to training at the end of validation for further training
+        self.model.train()
 
     def save_current_model(self, suffix_for_filename, force_save):
         """
