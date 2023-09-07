@@ -136,9 +136,9 @@ class Trainer():
             else:
                 self.early_stopping_counter += 1
 
-            if self.early_stopping_counter == 3 and self.best_accuracy > 0.9:
+            if (self.early_stopping_counter == 3 and self.best_accuracy > 0.9) or self.early_stopping_counter == 5:
                 logging.info(
-                    "Accuracy did not increase by at least 5% during the last three epochs and is above 90%, thus training will be stopped now!")
+                    f"Accuracy did not increase by at least 5% during for {self.early_stopping_counter} epochs, thus training will be stopped now!")
                 logging.info('######### Finished training #########')
                 wandb.finish()
                 return
