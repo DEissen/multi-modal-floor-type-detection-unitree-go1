@@ -9,7 +9,7 @@ class LeNet_Like(nn.Module):
         Paper introducing the architecture: https://ieeexplore.ieee.org/document/726791
     """
 
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, dropout_rate):
         """
             Init method for the LeNet_Like. It expects an 64x64 picture as input.
 
@@ -21,6 +21,7 @@ class LeNet_Like(nn.Module):
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1 = nn.Linear(16*13*13, 128)
+        self.dropout = nn.Dropout1d(dropout_rate)
         self.fc2 = nn.Linear(128, 64)
         self.fc3 = nn.Linear(64, num_classes)
 
@@ -29,6 +30,7 @@ class LeNet_Like(nn.Module):
         x = self.pool(F.relu(self.conv2(x)))
         x = x.view(-1, 16*13*13)
         x = F.relu(self.fc1(x))
+        x = self.dropout(x)
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
@@ -40,7 +42,7 @@ class LeNet_Like1D(nn.Module):
         Paper introducing the architecture: https://ieeexplore.ieee.org/document/726791
     """
 
-    def __init__(self, num_classes, num_input_features):
+    def __init__(self, num_classes, num_input_features, dropout_rate):
         """
             Init method for the LeNet_Like1D. It expects windows with a window size of 50.
 
@@ -53,6 +55,7 @@ class LeNet_Like1D(nn.Module):
         self.pool = nn.MaxPool1d(2)
         self.conv2 = nn.Conv1d(6, 16, 5)
         self.fc1 = nn.Linear(16*9, 128)
+        self.dropout = nn.Dropout1d(dropout_rate)
         self.fc2 = nn.Linear(128, 64)
         self.fc3 = nn.Linear(64, num_classes)
 
@@ -61,6 +64,7 @@ class LeNet_Like1D(nn.Module):
         x = self.pool(F.relu(self.conv2(x)))
         x = x.view(-1, 16*9)
         x = F.relu(self.fc1(x))
+        x = self.dropout(x)
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x

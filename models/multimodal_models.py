@@ -61,7 +61,6 @@ class LeNet_Like_multimodal(nn.Module):
             nn.Dropout1d(dropout_rate),
             nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Dropout1d(dropout_rate),
             nn.Linear(64, num_classes)
         )
 
