@@ -178,7 +178,7 @@ def test_random_multimodal_models(number_of_runs):
         # shuffle full list
         shuffle(sensors)
         # get random number of sensors (at least 2 and max 1/3 of sensors to keep it short)
-        num_of_sensors = randint(2, len(sensors)/3)
+        num_of_sensors = randint(2, int(len(sensors)/3))
 
         sensors = sensors[:num_of_sensors]
         main(perform_training, sensors, run_path, num_ckpt_to_load, logger)

@@ -14,9 +14,9 @@ This "How to" is further split in several subchapters. Each will describe how to
 - Further config changes must be done in the selected config files of the FTDDataset submodule directly
 ### Changing the model architecture
 - There are three different kinds of model architectures always usable in the main() function, which should be always present:
-    - A unimodal model for images (inside elif statement in line 102)
-    - A unimodal model for timeseries data (inside else statement in line 108)
-    - A multimodal model (inside if statement in line 88)
+    - A unimodal model for images (inside elif statement in line 108)
+    - A unimodal model for timeseries data (inside else statement in line 114)
+    - A multimodal model (inside if statement in line 94)
 - The existing model architectures can be found in the module **models/** where they can be modified
 - If you want to create a new model architecture you should do the following
     1. Define your model in the module **models/** similar to the existing one (important to have same input handling in order to prevent an update of the training routine)
@@ -49,7 +49,7 @@ This can be done for model training or model evaluation (see previous use cases)
 This is not automatically supported yet, as this highly dependent on the model architecture.
 
 # Folder structure and module descriptions
-This section contains a brief overview about all files in the repository. The code is structured in four modules/subfolder which contain code for different purposes.
+This section contains a brief overview about all files in the repository. The code is structured in five modules/subfolder which contain code for different purposes.
 - **custom_utils/** \
 This module contains some custom utility functions used in the repository.
     - *custom_utils.py:* Utility functions mainly for logging (including storage of logs)
