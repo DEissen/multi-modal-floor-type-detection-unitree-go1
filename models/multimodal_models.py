@@ -69,13 +69,14 @@ class LeNet_Like_multimodal(nn.Module):
         cat_input = []  # list for inputs for feature concatenation
         for sensor in self.sensors:
             # append output/ extracted features for sensor to the concatenation list
-            features_for_sensor = self.feature_extractors[sensor](data_struct[sensor])
-            cat_input.append(features_for_sensor.view(features_for_sensor.size(0), -1))
-        # concatenate all features
-        x = torch.cat(cat_input, dim=1)
+            features_for_sensor = self.feature_extractors[sensor](
+                data_struct[sensor])
+            # ### Use .view() method as Flatten Layer
+            cat_input.append(features_for_sensor.view(
+                features_for_sensor.size(0), -1))
 
-        # ### Use .view() method as Flatten Layer 
-        x = x.view(-1, self.neurons_for_cameras + self.neurons_for_timeseries)
+        # ### concatenate all features
+        x = torch.cat(cat_input, dim=1)
 
         # ### calculate classification based on concatenated features
         x = self.classification_layers(x)
