@@ -14,6 +14,8 @@ def visualize_data_sample_or_batch(data_dict, label=None, prediction=None):
             - label (int or Tensor): Optional label/ labels for the data_dict
             - prediction (int or Tensor): Optional prediction/ predictions for the data_dict
     """
+    
+    plt.rcParams.update({'font.size': 16})
     # initialize variables
     columns = 4
     rows = 2
@@ -147,6 +149,8 @@ def visualize_weights_of_dense_layer(trained_model, sensors, split_plot_for_each
             - split_plot_for_each_sensor (bool): Default = True. Select whether one big plot shall be shown (False) or whether
                                                  subplots for each feature extractor shall be shown (True)
     """
+    
+    plt.rcParams.update({'font.size': 16})
     #extract state dict
     params_dict = trained_model.state_dict()
 
