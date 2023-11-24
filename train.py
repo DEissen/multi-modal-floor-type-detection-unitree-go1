@@ -53,7 +53,7 @@ class Trainer():
             else:
                 display_name += "_multimod"
 
-            wandb.init(project="FA", entity="st177975", dir=self.run_paths_dict["wandb_path"],
+            wandb.init(project="MA", entity="st177975", dir=self.run_paths_dict["wandb_path"],
                        config=self.config_dict, name=display_name, resume="auto")
 
         # create data loader

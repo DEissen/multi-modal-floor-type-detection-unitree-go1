@@ -29,7 +29,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     """
     # ####### configurable parameters #######
     # ### variables for dataset config
-    dataset_path = r"C:\Users\Dominik\Downloads\FTDD_1.0"
+    dataset_path = r"C:\Users\Dominik\Downloads\FTDD1.1_preprocessed"
     mapping_filename = "label_mapping_full_dataset.json"
     preprocessing_config_filename = "preprocessing_config.json"
     faulty_data_creation_config_filename = "faulty_data_creation_config.json"
@@ -186,6 +186,6 @@ def test_random_multimodal_models(number_of_runs):
 
 if __name__ == "__main__":
     # ### uncomment function which you want to use (default is main())
-    main()
-    # complete_unimodal_test()
+    # main()
+    complete_unimodal_test()
     # test_random_multimodal_models(10)
