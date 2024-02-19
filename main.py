@@ -5,15 +5,14 @@ from random import shuffle, randint
 
 # custom imports
 from FTDDataset.FTDDataset import FloorTypeDetectionDataset
-from models.unimodal_models import LeNet_Like, VGG_Like, LeNet_Like1D
-from models.multimodal_models import LeNet_Like_multimodal
+from models.model_builder import model_builder
 from train import Trainer
 from eval import evaluate, load_state_dict
 from visualization.visualization import visualize_data_sample_or_batch, visualize_weights_of_dense_layer
 from custom_utils.custom_utils import gen_run_dir, CustomLogger, store_used_config
 
 
-def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=None, logger=None, test_dataset_path=None):
+def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=None, logger=None, test_dataset_path=r"D:\MA_Daten\FTDD1.6\test"):
     """
         Main function for training and evaluation of unimodal and multimodal models for the FTD dataset.
         Most important config parameters must be changed in the function itself, as this function is the core of the framework.
@@ -31,7 +30,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     """
     # ####### configurable parameters #######
     # ### variables for dataset config
-    dataset_path = r"D:\MA_Daten\FTDD2.0_preprocessed\FTDD_2.0_train"
+    dataset_path = r"D:\MA_Daten\FTDD1.6\train"
     mapping_filename = "label_mapping_full_dataset.json"
     preprocessing_config_filename = "preprocessing_config.json"
     faulty_data_creation_config_filename = "faulty_data_creation_config.json"
@@ -51,7 +50,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
         "lr": 0.001,
         "momentum": 0.9,
         "dropout_rate": 0.2,
-        "num_classes": 4,
+        "num_classes": 6,
         "use_wandb": True,
         "visualize_results": False,
         "train_log_interval": 200,
@@ -69,61 +68,17 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
 
     # ####### prepare datasets #######
     # load datasets
-    transformed_dataset = FloorTypeDetectionDataset(
-        dataset_path, sensors, mapping_filename, preprocessing_config_filename, faulty_data_creation_config_filename)
-    # if path to training dataset is provide it load it separately and use complete transformed dataset as training set
-    if test_dataset_path != None:
-        ds_train = transformed_dataset
-        ds_test = FloorTypeDetectionDataset(
-            test_dataset_path, sensors, mapping_filename, preprocessing_config_filename, faulty_data_creation_config_filename)
-    # else split the transformed dataset randomly in a test and train set depending on the use case
-    else:
-        if perform_training:
-            # if perform_training == True use 10 % as a test set
-            train_size = int(0.9 * len(transformed_dataset))
-        else:
-            # use whole dataset for evaluation in case of preform_training == False
-            train_size = 0
-
-        test_size = len(transformed_dataset) - train_size
-        ds_train, ds_test = torch.utils.data.random_split(
-            transformed_dataset, [train_size, test_size])
+    ds_train = FloorTypeDetectionDataset(
+        dataset_path, sensors, mapping_filename, preprocessing_config_filename)
+    ds_test = FloorTypeDetectionDataset(
+        test_dataset_path, sensors, mapping_filename, preprocessing_config_filename, faulty_data_creation_config_filename)  # only test dataset can contain faulty data
 
     # ####### get all config dicts for logging #######
-    label_mapping_dict = transformed_dataset.get_mapping_dict()
-    preprocessing_config_dict = transformed_dataset.get_preprocessing_config()
+    label_mapping_dict = ds_train.get_mapping_dict()
+    preprocessing_config_dict = ds_train.get_preprocessing_config()
 
     # ####### define model (automatically select uni or multimodal model) #######
-    # ## multimodal model when more than 1 sensor is provided
-    if len(sensors) > 1:
-        # determine number of input features for all timeseries sensors
-        num_input_features_dict = {}
-        for sensor in sensors:
-            if not "Cam" in sensor:
-                _, (training_sample, _) = next(enumerate(transformed_dataset))
-                num_input_features_dict[sensor] = training_sample[sensor].size()[
-                    0]
-
-        # define multimodal model
-        model = LeNet_Like_multimodal(
-            train_config_dict["num_classes"], sensors, num_input_features_dict, train_config_dict["dropout_rate"])
-
-    # ## unimodal model for images if "Cam" in the sensor name
-    elif "Cam" in sensors[0]:
-        # for images
-        model = LeNet_Like(
-            train_config_dict["num_classes"], train_config_dict["dropout_rate"])
-        # model = VGG_Like(train_config_dict["num_classes"], train_config_dict["dropout_rate"])
-
-    # ## unimodal model for timeseries data in remaining case
-    else:
-        # determine number of input features
-        _, (training_sample, _) = next(enumerate(transformed_dataset))
-        num_input_features = training_sample[sensors[0]].size()[0]
-
-        # define model
-        model = LeNet_Like1D(
-            train_config_dict["num_classes"], num_input_features, train_config_dict["dropout_rate"])
+    model = model_builder(sensors, ds_train, train_config_dict)
 
     # ####### start training if selected, otherwise load stored model #######
     if perform_training:
