@@ -1,13 +1,11 @@
-import torch
 import os
 import glob
-from random import shuffle, randint
 
 # custom imports
 from FTDDataset.FTDDataset import FloorTypeDetectionDataset
 from models.model_builder import model_builder
-from train import Trainer
-from eval import evaluate, load_state_dict
+from trainer import Trainer
+from evaluation import evaluate, load_state_dict
 from visualization.visualization import visualize_data_sample_or_batch, visualize_weights_of_dense_layer
 from custom_utils.utils import gen_run_dir, CustomLogger, store_used_config, load_run_path_config
 
@@ -35,7 +33,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     # ### load config based on run_path
     train_config_dict = load_run_path_config(run_path)
     train_dataset_path = train_config_dict["train_dataset_path"]
-    test_dataset_path= train_config_dict["test_dataset_path"]
+    test_dataset_path = train_config_dict["test_dataset_path"]
     if sensors == None:
         # use sensors from default config if no sensors were provided as function parameter
         sensors = train_config_dict["sensors"]
@@ -92,46 +90,8 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     # ####### store remaining logs #######
     # store used config as final step of logging
     store_used_config(run_paths_dict, ds_train.get_mapping_dict(),
-                      ds_train.get_preprocessing_config(), train_config_dict)
-
-
-def complete_unimodal_test():
-    perform_training = True
-    run_path = r""
-    num_ckpt_to_load = None
-    logger = CustomLogger()
-
-    # list of sensors to use
-    sensors = ['accelerometer', 'BellyCamLeft', 'BellyCamRight', 'bodyHeight', 'ChinCamLeft', 'ChinCamRight', 'footForce', 'gyroscope',
-               'HeadCamLeft', 'HeadCamRight', 'LeftCamLeft', 'LeftCamRight', 'mode', 'RightCamLeft', 'RightCamRight', 'rpy', 'velocity', 'yawSpeed']
-
-    for sensor in sensors:
-        sensor = [sensor]
-        main(perform_training, sensor, run_path, num_ckpt_to_load, logger)
-
-
-def test_random_multimodal_models(number_of_runs):
-    perform_training = True
-    run_path = r""
-    num_ckpt_to_load = None
-    logger = CustomLogger()
-
-    # run training for number_of_runs times with random subset of sensors
-    for i in range(number_of_runs):
-        # reinitialize list for each run
-        sensors = ['accelerometer', 'BellyCamLeft', 'BellyCamRight', 'bodyHeight', 'ChinCamLeft', 'ChinCamRight', 'footForce', 'gyroscope',
-                   'HeadCamLeft', 'HeadCamRight', 'LeftCamLeft', 'LeftCamRight', 'mode', 'RightCamLeft', 'RightCamRight', 'rpy', 'velocity', 'yawSpeed']
-        # shuffle full list
-        shuffle(sensors)
-        # get random number of sensors (at least 2 and max 1/3 of sensors to keep it short)
-        num_of_sensors = randint(2, int(len(sensors)/3))
-
-        sensors = sensors[:num_of_sensors]
-        main(perform_training, sensors, run_path, num_ckpt_to_load, logger)
+                      ds_train.get_preprocessing_config(), train_config_dict, ds_test.get_preprocessing_config())
 
 
 if __name__ == "__main__":
-    # ### uncomment function which you want to use (default is main())
     main()
-    # complete_unimodal_test()
-    # test_random_multimodal_models(10)
