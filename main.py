@@ -24,13 +24,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
             - num_ckpt_to_load (int): Number of the checkpoint to restore from run_path. If None is provided, the last element of the sorted file list will be taken.
             - logger (CustomLogger): Instance of custom logger class which must be provided in case main() is called multiple times by another function/program to prevent multiple logging
     """
-    # ####### configurable parameters #######
-    # ### variables for dataset config
-    mapping_filename = "label_mapping_full_dataset.json"
-    preprocessing_config_filename = "preprocessing_config.json"
-    faulty_data_creation_config_filename = "faulty_data_creation_config.json"
-
-    # ### load config based on run_path
+    # ####### load config based on run_path #######
     train_config_dict = load_run_path_config(run_path)
     train_dataset_path = train_config_dict["train_dataset_path"]
     test_dataset_path = train_config_dict["test_dataset_path"]
@@ -52,9 +46,9 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     # ####### prepare datasets #######
     # load datasets
     ds_train = FloorTypeDetectionDataset(
-        train_dataset_path, sensors, mapping_filename, preprocessing_config_filename)
+        train_dataset_path, sensors, run_path)
     ds_test = FloorTypeDetectionDataset(
-        test_dataset_path, sensors, mapping_filename, preprocessing_config_filename, faulty_data_creation_config_filename)  # only test dataset can contain faulty data
+        test_dataset_path, sensors, run_path, create_faulty_data=True)  # only test dataset shall contain faulty data
 
     # ####### define model (automatically select uni or multimodal model) #######
     model = model_builder(sensors, ds_train, train_config_dict)
