@@ -72,7 +72,8 @@ def load_run_path_config(run_path):
     """
     # create path to JSON config file (either default config or from run_path)
     if run_path == "":
-        config_path = r"./configs/default_config.json"
+        file_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = path.join(file_dir, os.pardir, "configs", "default_config.json")
     else:
         config_path = os.path.join(run_path, "config", "train_config.json")
 
@@ -146,7 +147,7 @@ def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_d
             - faulty_data_creation_config_dict (dict): Dict containing config for faulty data creation
     """
     label_mapping_config_path = path.join(
-        run_paths_dict["config_path"], "label_mapping_config.json")
+        run_paths_dict["config_path"], "label_mapping.json")
     preprocessing_config_path = path.join(
         run_paths_dict["config_path"], "preprocessing_config.json")
     train_config_path = path.join(
