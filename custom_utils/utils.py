@@ -59,6 +59,33 @@ def gen_run_dir(present_run_path=""):
     return run_paths_dict
 
 
+def load_run_path_config(run_path):
+    """
+        Helper function to load config from run_path or default config íf run_path == ""
+
+        Parameters:
+            - run_path (str): Path to the run folder from previous run.
+                              If run_path == "" a new run is executed and default config will be loaded.
+
+        Returns:
+            - config (dict): Dict containing the data from the config file
+    """
+    # create path to JSON config file (either default config or from run_path)
+    if run_path == "":
+        config_path = r"./configs/default_config.json"
+    else:
+        config_path = os.path.join(run_path, "config", "train_config.json")
+
+    # load config from config path
+    with open(config_path, "r") as f:
+        config = json.load(f)
+
+    # remove "comments" from default config if present
+    config.pop("list of all supported sensors NOT USED BY PROGRAM", None)
+
+    return config
+
+
 class CustomLogger():
     """
         CustomLogger class necessary to handle logging.Handler objects in case of multiple runs (to stop logging to previous runs).

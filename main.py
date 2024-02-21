@@ -9,10 +9,10 @@ from models.model_builder import model_builder
 from train import Trainer
 from eval import evaluate, load_state_dict
 from visualization.visualization import visualize_data_sample_or_batch, visualize_weights_of_dense_layer
-from custom_utils.custom_utils import gen_run_dir, CustomLogger, store_used_config
+from custom_utils.utils import gen_run_dir, CustomLogger, store_used_config, load_run_path_config
 
 
-def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=None, logger=None, test_dataset_path=r"D:\MA_Daten\FTDD1.6\test"):
+def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=None, logger=None):
     """
         Main function for training and evaluation of unimodal and multimodal models for the FTD dataset.
         Most important config parameters must be changed in the function itself, as this function is the core of the framework.
@@ -25,38 +25,23 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
             - run_path (str): Path to files stored from a previous run for loading a checkpoint, ...
             - num_ckpt_to_load (int): Number of the checkpoint to restore from run_path. If None is provided, the last element of the sorted file list will be taken.
             - logger (CustomLogger): Instance of custom logger class which must be provided in case main() is called multiple times by another function/program to prevent multiple logging
-            - test_dataset_path (str): Path to the files of the separate test dataset (default = None).
-                                       If None is provided, the training set will be randomly split in test and training set.
     """
     # ####### configurable parameters #######
     # ### variables for dataset config
-    dataset_path = r"D:\MA_Daten\FTDD1.6\train"
     mapping_filename = "label_mapping_full_dataset.json"
     preprocessing_config_filename = "preprocessing_config.json"
     faulty_data_creation_config_filename = "faulty_data_creation_config.json"
 
-    # ### create list of sensors to use if not provided by caller
-    # List of all sensors available: 'accelerometer', 'BellyCamLeft', 'BellyCamRight', 'bodyHeight', 'ChinCamLeft', 'ChinCamRight', 'footForce', 'gyroscope',
-    #                                'HeadCamLeft', 'HeadCamRight', 'LeftCamLeft', 'LeftCamRight', 'mode', 'rpy', 'RightCamLeft', 'RightCamRight', 'velocity', 'yawSpeed'
+    # ### load config based on run_path
+    train_config_dict = load_run_path_config(run_path)
+    train_dataset_path = train_config_dict["train_dataset_path"]
+    test_dataset_path= train_config_dict["test_dataset_path"]
     if sensors == None:
-        sensors = ['accelerometer', 'BellyCamLeft',
-                   'BellyCamRight', 'bodyHeight', 'ChinCamLeft']
-
-    # ### config for training
-    train_config_dict = {
-        "epochs": 10,
-        "batch_size": 8,
-        "optimizer": "adam",
-        "lr": 0.001,
-        "momentum": 0.9,
-        "dropout_rate": 0.2,
-        "num_classes": 6,
-        "use_wandb": True,
-        "visualize_results": False,
-        "train_log_interval": 200,
-        "sensors": sensors,
-        "dataset_path": dataset_path
-    }
+        # use sensors from default config if no sensors were provided as function parameter
+        sensors = train_config_dict["sensors"]
+    else:
+        # otherwise use sensors from function parameter and log them in config dict
+        train_config_dict["sensors"] = sensors
 
     # ####### start of program (only modify code below if you want to change some behavior) #######
     run_paths_dict = gen_run_dir(run_path)
@@ -69,13 +54,9 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     # ####### prepare datasets #######
     # load datasets
     ds_train = FloorTypeDetectionDataset(
-        dataset_path, sensors, mapping_filename, preprocessing_config_filename)
+        train_dataset_path, sensors, mapping_filename, preprocessing_config_filename)
     ds_test = FloorTypeDetectionDataset(
         test_dataset_path, sensors, mapping_filename, preprocessing_config_filename, faulty_data_creation_config_filename)  # only test dataset can contain faulty data
-
-    # ####### get all config dicts for logging #######
-    label_mapping_dict = ds_train.get_mapping_dict()
-    preprocessing_config_dict = ds_train.get_preprocessing_config()
 
     # ####### define model (automatically select uni or multimodal model) #######
     model = model_builder(sensors, ds_train, train_config_dict)
@@ -110,8 +91,8 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
 
     # ####### store remaining logs #######
     # store used config as final step of logging
-    store_used_config(run_paths_dict, label_mapping_dict,
-                      preprocessing_config_dict, train_config_dict)
+    store_used_config(run_paths_dict, ds_train.get_mapping_dict(),
+                      ds_train.get_preprocessing_config(), train_config_dict)
 
 
 def complete_unimodal_test():
