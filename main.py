@@ -90,7 +90,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     # ####### store remaining logs #######
     # store used config as final step of logging
     store_used_config(run_paths_dict, ds_train.get_mapping_dict(),
-                      ds_train.get_preprocessing_config(), train_config_dict, ds_test.get_preprocessing_config())
+                      ds_train.get_preprocessing_config(), train_config_dict, ds_test.get_faulty_data_creation_config())
 
 
 if __name__ == "__main__":

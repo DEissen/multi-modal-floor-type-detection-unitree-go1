@@ -134,7 +134,7 @@ class CustomLogger():
             self.logger.addHandler(self.stream_handler)
 
 
-def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict):
+def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict, faulty_data_creation_config_dict):
     """
         Function to store all config dicts as JSON files in config_path of the run dir.
 
@@ -143,6 +143,7 @@ def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_d
             - label_mapping_dict (dict): Dict containing label to number mapping of this run
             - preprocessing_config_dict (dict): Dict containing preprocessing config of this run
             - train_config_dict (dict): Dict containing training config of this run
+            - faulty_data_creation_config_dict (dict): Dict containing config for faulty data creation
     """
     label_mapping_config_path = path.join(
         run_paths_dict["config_path"], "label_mapping_config.json")
@@ -150,10 +151,13 @@ def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_d
         run_paths_dict["config_path"], "preprocessing_config.json")
     train_config_path = path.join(
         run_paths_dict["config_path"], "train_config.json")
+    faulty_data_creation_config_path = path.join(
+        run_paths_dict["config_path"], "faulty_data_creation_config.json")
 
     save_struct_as_json(label_mapping_config_path, label_mapping_dict)
     save_struct_as_json(preprocessing_config_path, preprocessing_config_dict)
     save_struct_as_json(train_config_path, train_config_dict)
+    save_struct_as_json(faulty_data_creation_config_path, faulty_data_creation_config_dict)
 
 
 def save_struct_as_json(new_file_path, dict_to_save):
