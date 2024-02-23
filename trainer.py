@@ -283,7 +283,7 @@ class Trainer():
                 # update metrics
                 _, predicted = torch.max(outputs.data, 1)
                 self.val_confusion_matrix.update(predicted, labels)
-        
+
         # calculate average validation loss
         self.val_loss = self.val_loss / len(self.ds_val_loader)
 

@@ -59,6 +59,35 @@ def gen_run_dir(present_run_path=""):
     return run_paths_dict
 
 
+def load_run_path_config(run_path):
+    """
+        Helper function to load config from run_path or default config íf run_path == ""
+
+        Parameters:
+            - run_path (str): Path to the run folder from previous run.
+                              If run_path == "" a new run is executed and default config will be loaded.
+
+        Returns:
+            - config (dict): Dict containing the data from the config file
+    """
+    # create path to JSON config file (either default config or from run_path)
+    if run_path == "":
+        file_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = path.join(file_dir, os.pardir,
+                                "configs", "default_config.json")
+    else:
+        config_path = os.path.join(run_path, "config", "train_config.json")
+
+    # load config from config path
+    with open(config_path, "r") as f:
+        config = json.load(f)
+
+    # remove "comments" from default config if present
+    config.pop("list of all supported sensors NOT USED BY PROGRAM", None)
+
+    return config
+
+
 class CustomLogger():
     """
         CustomLogger class necessary to handle logging.Handler objects in case of multiple runs (to stop logging to previous runs).
@@ -107,7 +136,7 @@ class CustomLogger():
             self.logger.addHandler(self.stream_handler)
 
 
-def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict):
+def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict, faulty_data_creation_config_dict):
     """
         Function to store all config dicts as JSON files in config_path of the run dir.
 
@@ -116,17 +145,22 @@ def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_d
             - label_mapping_dict (dict): Dict containing label to number mapping of this run
             - preprocessing_config_dict (dict): Dict containing preprocessing config of this run
             - train_config_dict (dict): Dict containing training config of this run
+            - faulty_data_creation_config_dict (dict): Dict containing config for faulty data creation
     """
     label_mapping_config_path = path.join(
-        run_paths_dict["config_path"], "label_mapping_config.json")
+        run_paths_dict["config_path"], "label_mapping.json")
     preprocessing_config_path = path.join(
         run_paths_dict["config_path"], "preprocessing_config.json")
     train_config_path = path.join(
         run_paths_dict["config_path"], "train_config.json")
+    faulty_data_creation_config_path = path.join(
+        run_paths_dict["config_path"], "faulty_data_creation_config.json")
 
     save_struct_as_json(label_mapping_config_path, label_mapping_dict)
     save_struct_as_json(preprocessing_config_path, preprocessing_config_dict)
     save_struct_as_json(train_config_path, train_config_dict)
+    save_struct_as_json(faulty_data_creation_config_path,
+                        faulty_data_creation_config_dict)
 
 
 def save_struct_as_json(new_file_path, dict_to_save):
