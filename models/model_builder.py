@@ -10,17 +10,41 @@ else:
 
 
 def model_builder(sensors, dataset, config_dict):
+    """
+        Create model based on used sensors, fitting for the dataset according to the configuration from config_dict.
+        Model can be uni-model or multi-modal.
+
+        Parameters:
+            - sensors (list): List of all sensors which shall be considered for this dataset
+            - dataset (torch.utils.data.Dataset): Dataset for which the model shall be used
+            - config_dict (dict): Dict containing the configuration for the testing
+
+        Returns:
+            - model: The fitting uni-modal or multi-modal model
+    """
     model = None
 
     # ## multimodal model when more than 1 sensor is provided
     if len(sensors) > 1:
-       model = multimodal_model_builder(sensors, dataset, config_dict) 
+        model = multimodal_model_builder(sensors, dataset, config_dict)
     else:
-        model = unimodal_model_builder(sensors, dataset, config_dict)        
+        model = unimodal_model_builder(sensors, dataset, config_dict)
 
     return model
 
+
 def multimodal_model_builder(sensors, dataset, config_dict):
+    """
+        Create multi-modal model based on used sensors, fitting for the dataset according to the configuration from config_dict.
+
+        Parameters:
+            - sensors (list): List of all sensors which shall be considered for this dataset
+            - dataset (torch.utils.data.Dataset): Dataset for which the model shall be used
+            - config_dict (dict): Dict containing the configuration for the testing
+
+        Returns:
+            - multimodal_model: The fitting multi-modal model
+    """
     multimodal_model = None
     # determine number of input features for all timeseries sensors
     num_input_features_dict = {}
@@ -36,7 +60,19 @@ def multimodal_model_builder(sensors, dataset, config_dict):
 
     return multimodal_model
 
+
 def unimodal_model_builder(sensors, dataset, config_dict):
+    """
+        Create uni-modal model based on used sensors, fitting for the dataset according to the configuration from config_dict.
+
+        Parameters:
+            - sensors (list): List of all sensors which shall be considered for this dataset
+            - dataset (torch.utils.data.Dataset): Dataset for which the model shall be used
+            - config_dict (dict): Dict containing the configuration for the testing
+
+        Returns:
+            - unimodal_model: The fitting uni-modal model
+    """
     unimodal_model = None
     # ## unimodal model for images if "Cam" in the sensor name
     if "Cam" in sensors[0]:
@@ -54,5 +90,5 @@ def unimodal_model_builder(sensors, dataset, config_dict):
         # define model
         unimodal_model = LeNet_Like1D(
             config_dict["num_classes"], num_input_features, config_dict["dropout_rate"])
-    
+
     return unimodal_model

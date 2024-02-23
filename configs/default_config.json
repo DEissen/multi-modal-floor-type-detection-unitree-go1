@@ -1,5 +1,5 @@
 {
-   "epochs": 10,
+   "epochs": 5,
    "batch_size": 8,
    "optimizer": "adam",
    "lr": 0.001,
@@ -7,7 +7,7 @@
    "dropout_rate": 0.2,
    "num_classes": 6,
    "use_wandb": true,
-   "visualize_results": true,
+   "visualize_results": false,
    "train_log_interval": 200,
    "list of all supported sensors NOT USED BY PROGRAM": [
       "accelerometer",
