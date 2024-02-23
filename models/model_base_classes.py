@@ -10,7 +10,7 @@ class ModelBaseClass(nn.Module):
 
     def __init__(self):
         """
-            Constructor of BaseModelClass() class.
+            Init method of BaseModelClass() class.
         """
         # __init__() method of superclass (nn.Module) must be called to be able to define layers.
         super().__init__()
@@ -20,7 +20,7 @@ class ModelBaseClass(nn.Module):
             Method to calculate and store the number of flatten output features the shape of the output in members.
 
             Parameters:
-                - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for.
+                - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
         """
         self.num_flat_output_features = self.__get_num_flat_output_features(
             sample_batch)
@@ -57,7 +57,7 @@ class ModelBaseClass(nn.Module):
             Private method to calculate the number of flatten output of the model based on a sample_batch
 
             Parameters:
-                - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for.
+                - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
 
             Returns:
                 - (int): Number of flatten output of the model
@@ -79,7 +79,7 @@ class ModelBaseClass(nn.Module):
             Private method to get the shape of the models output based on a sample_batch
 
             Parameters:
-                - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for.
+                - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
 
             Returns:
                 - (torch.Tensor): Shape of the output of the model
@@ -95,19 +95,23 @@ class ModalityNetBaseClass(ModelBaseClass):
 
     def __init__(self, sensor, model_config_dict):
         """
-            Constructor of ModalityNetBaseClass() class.
+            Init method of ModalityNetBaseClass() class.
+
+            Parameters:
+                - sensor (str): Name of the sensor for which this modality net is used
+                - model_config_dict (dict): Dict which contains all configuration parameters for the model
         """
         super().__init__()
 
         self.sensor = sensor
         self.model_config_dict = model_config_dict
 
-    def forward(self, data_struct):
+    def forward(self, data_dict):
         """
             Default implementation of forward() method shall not be callable and thus will raise an exception.
 
             Parameters:
-                - data_struct (torch.Tensor): Batch from dataset to process
+                - data_dict (torch.Tensor): Batch from dataset to process
 
             Raises:
                 - RuntimeError: Error whenever this function is called = must be overwritten by subclass
@@ -117,6 +121,34 @@ class ModalityNetBaseClass(ModelBaseClass):
             "1. Instance of ModalityNetBaseClass can't be used for training, ...\n\t\t"
             "2. forward() method must be overwritten by subclass")
 
+    def confirm_input_is_an_image(self, sample_batch):
+        """
+            Method to check data from sample batch for compatibility (images expected). Method shall be called by subclass.
+
+            Parameters:
+                - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
+
+            Raises:
+                TypeError: Raised if input data from sample batch is not a batch of images
+        """
+        if len(sample_batch[self.sensor].shape) != 4:
+            raise TypeError(
+                f"This modality net is not compatible with input of sensor {self.sensor}, as images with additional batch dimension are expected (batch, channels, x, y) as input!")
+
+    def confirm_input_is_timeseries_data(self, sample_batch):
+        """
+            Method to check data from sample batch for compatibility (time series data expected). Method shall be called by subclass.
+
+            Parameters:
+                - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
+
+            Raises:
+                TypeError: Raised if input data from sample batch is not a batch of timeseries data
+        """
+        if len(sample_batch[self.sensor].shape) != 3:
+            raise TypeError(
+                f"This modality net is not compatible with input of sensor {self.sensor}, as timeseries data with additional batch dimension is expected (batch, channels, data points) as input!")
+
 
 class FusionModelBaseClass(ModelBaseClass):
     """
@@ -125,7 +157,7 @@ class FusionModelBaseClass(ModelBaseClass):
 
     def __init__(self, sensors, model_config_dict, modality_nets: nn.ModuleDict):
         """
-            Constructor of FusionModelBaseClass() class.
+            Init method of FusionModelBaseClass() class.
 
             Parameters:
                 - sensors (list): List of all sensors which shall be used
@@ -165,12 +197,12 @@ class FusionModelBaseClass(ModelBaseClass):
             raise TypeError(
                 "At least one provided modality net is not a direct subclass of ModalityNet class!")
 
-    def forward(self, data_struct):
+    def forward(self, data_dict):
         """
             Default implementation of forward() method shall not be callable and thus will raise an exception.
 
             Parameters:
-                - data_struct (torch.Tensor): Batch from dataset to process
+                - data_dict (torch.Tensor): Batch from dataset to process
 
             Raises:
                 - RuntimeError: Error whenever this function is called = must be overwritten by subclass
@@ -188,7 +220,7 @@ class MultiModalBaseModel(nn.Module):
 
     def __init__(self, num_classes, sensors, model_config_dict, fusion_model: FusionModelBaseClass):
         """
-            Constructor of MultiModalBaseModel() class.
+            Init method of MultiModalBaseModel() class.
 
             Parameters:
                 - num_classes (int): Number of output neurons/ classes.
@@ -216,12 +248,12 @@ class MultiModalBaseModel(nn.Module):
             raise TypeError(
                 "The provided fusion model is not a direct subclass of FusionModel class!")
 
-    def forward(self, data_struct):
+    def forward(self, data_dict):
         """
             Default implementation of forward() method shall not be callable and thus will raise an exception.
 
             Parameters:
-                - data_struct (torch.Tensor): Batch from dataset to process
+                - data_dict (torch.Tensor): Batch from dataset to process
 
             Raises:
                 - RuntimeError: Error whenever this function is called = must be overwritten by subclass

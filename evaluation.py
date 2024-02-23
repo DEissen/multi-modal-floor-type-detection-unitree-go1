@@ -33,15 +33,8 @@ def evaluate(model, ds_test, sensors, config_dict):
     # get predictions for test set
     with torch.no_grad():
         for (data_dict, labels) in ds_test_loader:
-            # prepare data_dict for model
-            if len(sensors) == 1:
-                # extract input for uni-modal case
-                inputs = data_dict[sensors[0]]
-            else:
-                inputs = data_dict
-
             # get predictions
-            outputs = model(inputs)
+            outputs = model(data_dict)
             _, predicted = torch.max(outputs.data, 1)
 
             # update confusion matrix

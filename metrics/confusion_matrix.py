@@ -18,7 +18,7 @@ class ConfusionMatrix():
 
     def __init__(self, num_classes):
         """
-            Constructor of ConfusionMatrix() class.
+            Init method of ConfusionMatrix() class.
 
             Parameters:
                 - num_classes (int): Number of classes present in the classification problem

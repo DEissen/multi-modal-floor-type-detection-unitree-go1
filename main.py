@@ -51,7 +51,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
         test_dataset_path, sensors, run_path, create_faulty_data=True)  # only test dataset shall contain faulty data
 
     # ####### define model (automatically select uni or multimodal model) #######
-    model = model_builder(sensors, ds_train, train_config_dict)
+    model = model_builder(train_config_dict["num_classes"], sensors, ds_train, train_config_dict["model"])
 
     # ####### start training if selected, otherwise load stored model #######
     if perform_training:
