@@ -28,7 +28,7 @@ def test_random_multimodal_models(number_of_runs):
         At least two and max 1/3 of the sensors are selected for each run.
 
         Parameters:
-            number_of_runs (int): Number of how many random multi-modal models shall be trained.
+            - number_of_runs (int): Number of how many random multi-modal models shall be trained.
 
     """
     perform_training = True
