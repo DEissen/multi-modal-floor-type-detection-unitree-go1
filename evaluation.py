@@ -39,7 +39,7 @@ def evaluate(model, ds_test, sensors, config_dict):
                 inputs = data_dict[sensors[0]]
             else:
                 inputs = data_dict
-            
+
             # get predictions
             outputs = model(inputs)
             _, predicted = torch.max(outputs.data, 1)
@@ -67,22 +67,23 @@ def evaluate(model, ds_test, sensors, config_dict):
 
     # log metrics to console
     logging_message = [f'\nResults for test set:',
-                        f'val acc: {test_accuracy*100:.2f} %',
-                        f'{averageing_info_string}val sensitivity: {test_sensitivity*100:.2f} %',
-                        f'{averageing_info_string}val specificity: {test_specificity*100:.2f} %',
-                        f'{averageing_info_string}val balanced acc: {test_balanced_accuracy*100:.2f} %',
-                        f'val confusion matrix:\n{test_confusion_matrix.get_result()}']
+                       f'val acc: {test_accuracy*100:.2f} %',
+                       f'{averageing_info_string}val sensitivity: {test_sensitivity*100:.2f} %',
+                       f'{averageing_info_string}val specificity: {test_specificity*100:.2f} %',
+                       f'{averageing_info_string}val balanced acc: {test_balanced_accuracy*100:.2f} %',
+                       f'val confusion matrix:\n{test_confusion_matrix.get_result()}']
     logging_message = "\n".join(logging_message)
     logging.info(logging_message)
 
     logging.info('######### Finished evaluation #########')
-    
+
     if config_dict["visualize_results"]:
         logging.info("Show example prediction for first image of last batch:")
         visualize_data_sample_or_batch(data_dict, labels, predicted)
         # plot does somehow not work yet!
         # logging.info("Show plot of confusion matrix:")
         # test_confusion_matrix.plot()
+
 
 def load_state_dict(model, load_path):
     """
@@ -95,5 +96,5 @@ def load_state_dict(model, load_path):
             - load_path (str): Path of the .pt file which contains the stored state dict
     """
     model.load_state_dict(torch.load(load_path))
-    
+
     logging.info(f"Loaded state_dict for the model from '{load_path}'")

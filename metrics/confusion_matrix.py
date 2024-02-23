@@ -94,7 +94,7 @@ class ConfusionMatrix():
             correct = tp
 
         accuracy = correct / total
-        
+
         accuracy = torch.sum(accuracy)
 
         return accuracy
