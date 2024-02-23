@@ -2,11 +2,11 @@ import torch
 
 # custom imports
 if __name__ == "__main__":
-    from unimodal.unimodal_models import LeNet_Like, VGG_Like, LeNet_Like1D
-    from multimodal.multimodal_models import LeNet_Like_multimodal
+    from unimodal_models import LeNet_Like, VGG_Like, LeNet_Like1D
+    from multimodal_models import LeNet_Like_multimodal
 else:
-    from models.unimodal.unimodal_models import LeNet_Like, VGG_Like, LeNet_Like1D
-    from models.multimodal.multimodal_models import LeNet_Like_multimodal
+    from models.unimodal_models import LeNet_Like, VGG_Like, LeNet_Like1D
+    from models.multimodal_models import LeNet_Like_multimodal
 
 
 def model_builder(sensors, dataset, config_dict):
