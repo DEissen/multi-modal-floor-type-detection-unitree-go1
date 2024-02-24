@@ -20,7 +20,7 @@ class Trainer():
 
     def __init__(self, model, ds_train, ds_val, sensors, config_dict, run_paths_dict):
         """
-            Constructor of Trainer() class.
+            Init method of Trainer() class.
 
             Parameters:
                 - model (torch.nn): Model which shall be trained
@@ -154,18 +154,11 @@ class Trainer():
                 - data_dict (dict): Batch of data which is stored as a dict where the sensor names are the key
                 - labels (list): Labels for the batch
         """
-        # prepare data from data_dict for model
-        if len(self.sensors) == 1:
-            # extract input for uni-modal case
-            inputs = data_dict[self.sensors[0]]
-        else:
-            inputs = data_dict
-
         # zero the parameter gradients
         self.optimizer.zero_grad()
 
         # forward + backward + optimize
-        outputs = self.model(inputs)
+        outputs = self.model(data_dict)
         loss = self.train_loss_object(outputs, labels)
         loss.backward()
         self.optimizer.step()
@@ -267,15 +260,8 @@ class Trainer():
 
         with torch.no_grad():
             for (data_dict, labels) in self.ds_val_loader:
-                # prepare data_dict for model
-                if len(self.sensors) == 1:
-                    # extract input for uni-modal case
-                    inputs = data_dict[self.sensors[0]]
-                else:
-                    inputs = data_dict
-
                 # get predicitons
-                outputs = self.model(inputs)
+                outputs = self.model(data_dict)
 
                 # add loss of batch to validation loss
                 self.val_loss += self.val_loss_object(outputs, labels)
