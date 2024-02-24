@@ -2,26 +2,26 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.model_base_classes import MultiModalBaseModel
+from models.model_base_classes import MultiModalBaseClass
 
 
-class Dense_ClassificationHead(MultiModalBaseModel):
+class Dense_ClassificationHead(MultiModalBaseClass):
     """
         Class for dense layer based classification head.
     """
 
-    def __init__(self, num_classes, sensors, model_config_dict, fusion_model):
+    def __init__(self, num_classes, sensors, classification_head_config_dict, fusion_model):
         """
             Init method of Dense_ClassificationHead() class.
 
             Parameters:
                 - num_classes (int): Number of output neurons/ classes.
                 - sensors (list): List of all sensors which shall be used
-                - model_config_dict (dict): Dict which contains all configuration parameters for the model
+                - classification_head_config_dict (dict): Dict containing the classification head specific configuration parameters
                 - fusion_model (FusionModelBaseClass): Fusion model instance to be used which must be a subclass of FusionModelBaseClass
         """
         # #### call init method of superclass 
-        super().__init__(num_classes, sensors, model_config_dict, fusion_model)
+        super().__init__(num_classes, sensors, classification_head_config_dict, fusion_model)
 
         # #### Check whether fusion model is compatible with this classification head
         fusion_model_output_shape = self.fusion_model.get_shape_output_features()
@@ -30,7 +30,7 @@ class Dense_ClassificationHead(MultiModalBaseModel):
 
         # #### define layers
         self.fc1 = nn.Linear(int(fusion_model_output_shape[0]), 128)
-        self.dropout = nn.Dropout1d(model_config_dict["dropout_rate"])
+        self.dropout = nn.Dropout1d(classification_head_config_dict["dropout_rate"])
         self.fc2 = nn.Linear(128, 64)
         self.fc3 = nn.Linear(64, num_classes)
 
@@ -54,23 +54,23 @@ class Dense_ClassificationHead(MultiModalBaseModel):
         x = self.fc3(x)
         return x
 
-# class Template_ClassificationHead(MultiModalBaseModel):
+# class Template_ClassificationHead(MultiModalBaseClass):
 #     """
 #         Template classification head as baseline for new classification heads.
 #     """
 
-#     def __init__(self, num_classes, sensors, model_config_dict, fusion_model):
+#     def __init__(self, num_classes, sensors, classification_head_config_dict, fusion_model):
 #         """
 #             Init method of Template_ClassificationHead() class.
 
 #             Parameters:
 #                 - num_classes (int): Number of output neurons/ classes.
 #                 - sensors (list): List of all sensors which shall be used
-#                 - model_config_dict (dict): Dict which contains all configuration parameters for the model
+#                 - classification_head_config_dict (dict): Dict containing the classification head specific configuration parameters
 #                 - fusion_model (FusionModelBaseClass): Fusion model instance to be used which must be a subclass of FusionModelBaseClass
 #         """
 #         # #### call init method of superclass 
-#         super().__init__(num_classes, sensors, model_config_dict, fusion_model)
+#         super().__init__(num_classes, sensors, classification_head_config_dict, fusion_model)
 
 #         # #### Check whether fusion model is compatible with this classification head
 #         fusion_model_output_shape = self.fusion_model.get_shape_output_features()

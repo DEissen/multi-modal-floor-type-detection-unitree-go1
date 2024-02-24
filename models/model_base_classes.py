@@ -155,19 +155,19 @@ class FusionModelBaseClass(ModelBaseClass):
         Base class for all fusion models.
     """
 
-    def __init__(self, sensors, model_config_dict, modality_nets: nn.ModuleDict):
+    def __init__(self, sensors, fusion_model_config_dict, modality_nets: nn.ModuleDict):
         """
             Init method of FusionModelBaseClass() class.
 
             Parameters:
                 - sensors (list): List of all sensors which shall be used
-                - model_config_dict (dict): Dict which contains all configuration parameters for the model
+                - fusion_model_config_dict (dict): Dict containing the fusion model specific configuration parameters
                 - modality_nets (nn.ModuleDict): ModuleDict containing all modality nets which must be a subclass of ModalityNetBaseClass
         """
         super().__init__()
 
         self.sensors = sensors
-        self.model_config_dict = model_config_dict
+        self.fusion_model_config_dict = fusion_model_config_dict
         self.modality_nets = modality_nets
 
         self.check_compatibility()
@@ -213,26 +213,26 @@ class FusionModelBaseClass(ModelBaseClass):
             "2. forward() method must be overwritten by subclass")
 
 
-class MultiModalBaseModel(nn.Module):
+class MultiModalBaseClass(nn.Module):
     """
         Base class for all multi-modal models.
     """
 
-    def __init__(self, num_classes, sensors, model_config_dict, fusion_model: FusionModelBaseClass):
+    def __init__(self, num_classes, sensors, classification_head_config_dict, fusion_model: FusionModelBaseClass):
         """
-            Init method of MultiModalBaseModel() class.
+            Init method of MultiModalBaseClass() class.
 
             Parameters:
                 - num_classes (int): Number of output neurons/ classes.
                 - sensors (list): List of all sensors which shall be used
-                - model_config_dict (dict): Dict which contains all configuration parameters for the model
+                - classification_head_config_dict (dict): Dict containing the classification head specific configuration parameters
                 - fusion_model (FusionModelBaseClass): Fusion model instance to be used which must be a subclass of FusionModelBaseClass
         """
         super().__init__()
 
         self.num_classes = num_classes
         self.sensors = sensors
-        self.model_config_dict = model_config_dict
+        self.classification_head_config_dict = classification_head_config_dict
         self.fusion_model = fusion_model
 
         self.check_compatibility()
@@ -259,6 +259,6 @@ class MultiModalBaseModel(nn.Module):
                 - RuntimeError: Error whenever this function is called = must be overwritten by subclass
         """
         raise RuntimeError(
-            "Method forward() of MultiModalBaseModel shall not be called which means:\n\t\t"
-            "1. Instance of MultiModalBaseModel can't be used for training, ...\n\t\t"
+            "Method forward() of MultiModalBaseClass shall not be called which means:\n\t\t"
+            "1. Instance of MultiModalBaseClass can't be used for training, ...\n\t\t"
             "2. forward() method must be overwritten by subclass")

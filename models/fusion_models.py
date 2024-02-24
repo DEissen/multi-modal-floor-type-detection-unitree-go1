@@ -10,18 +10,18 @@ class Concatenate_FusionModel(FusionModelBaseClass):
         Class for simple feature fusion with concatenation of flatten outputs.
     """
 
-    def __init__(self, sensors, model_config_dict, modality_nets, sample_batch):
+    def __init__(self, sensors, fusion_model_config_dict, modality_nets, sample_batch):
         """
             Init method of ConcatenateForFusion() class.
 
             Parameters:
-                - sensor (string): Name of the sensor for which this modality net is used
-                - model_config_dict (dict): Dict which contains all configuration parameters for the model
+                - sensors (list): List containing all sensors which are present in the datasets
+                - fusion_model_config_dict (dict): Dict containing the fusion model specific configuration parameters
                 - modality_nets (nn.ModuleDict): ModuleDict containing all modality nets which must be a subclass of ModalityNetBaseClass
                 - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
         """
         # #### call init method of superclass
-        super().__init__(sensors, model_config_dict, modality_nets)
+        super().__init__(sensors, fusion_model_config_dict, modality_nets)
 
         # #### calculate shape of output of the fusion model based on sample batch
         self.calculate_features_from_sample_batch(sample_batch)
@@ -57,18 +57,18 @@ class Concatenate_FusionModel(FusionModelBaseClass):
 #          Template fusion model as baseline for new modality nets.
 #     """
 
-#     def __init__(self, sensors, model_config_dict, modality_nets, sample_batch):
+#     def __init__(self, sensors, fusion_model_config_dict, modality_nets, sample_batch):
 #         """
 #             Init method of Template_FusionModel() class.
 
 #             Parameters:
-#                 - sensor (string): Name of the sensor for which this modality net is used
-#                 - model_config_dict (dict): Dict which contains all configuration parameters for the model
+#                 - sensors (list): List containing all sensors which are present in the datasets
+#                 - fusion_model_config_dict (dict): Dict containing the fusion model specific configuration parameters
 #                 - modality_nets (nn.ModuleDict): ModuleDict containing all modality nets which must be a subclass of ModalityNetBaseClass
 #                 - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
 #         """
 #         # #### call init method of superclass
-#         super().__init__(sensors, model_config_dict, modality_nets)
+#         super().__init__(sensors, fusion_model_config_dict, modality_nets)
 
 #         # #### define layers
 #         # TODO: add layers as members
