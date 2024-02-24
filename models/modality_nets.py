@@ -11,17 +11,17 @@ class LeNet2dLike_ModalityNet(ModalityNetBaseClass):
         Paper introducing the architecture: https://ieeexplore.ieee.org/document/726791
     """
 
-    def __init__(self, sensor, model_config_dict, sample_batch):
+    def __init__(self, sensor, modality_net_config_dict, sample_batch):
         """
             Init method of LeNet2dLike_ModalityNet() class.
 
             Parameters:
                 - sensor (string): Name of the sensor for which this modality net is used
-                - model_config_dict (dict): Dict which contains all configuration parameters for the model
+                - modality_net_config_dict (dict): Dict containing the modality net specific configuration parameters
                 - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
         """
         # #### call init method of superclass
-        super().__init__(sensor, model_config_dict)
+        super().__init__(sensor, modality_net_config_dict)
 
         # #### check whether input is compatible
         self.confirm_input_is_an_image(sample_batch)
@@ -55,17 +55,17 @@ class LeNet1dLike_ModalityNet(ModalityNetBaseClass):
         Paper introducing the architecture: https://ieeexplore.ieee.org/document/726791
     """
 
-    def __init__(self, sensor, model_config_dict, sample_batch):
+    def __init__(self, sensor, modality_net_config_dict, sample_batch):
         """
             Init method for the LeNet1dLike_ModalityNet.
 
             Parameters:
                 - sensor (string): Name of the sensor for which this modality net is used
-                - model_config_dict (dict): Dict which contains all configuration parameters for the model
+                - modality_net_config_dict (dict): Dict containing the modality net specific configuration parameters
                 - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
         """
         # #### call init method of superclass
-        super().__init__(sensor, model_config_dict)
+        super().__init__(sensor, modality_net_config_dict)
 
         # #### check whether input is compatible
         self.confirm_input_is_timeseries_data(sample_batch)
@@ -95,22 +95,89 @@ class LeNet1dLike_ModalityNet(ModalityNetBaseClass):
         x = self.pool(F.relu(self.conv2(x)))
         return x
 
+
+class VggLike_ModalityNet(ModalityNetBaseClass):
+    """
+        Modality net based on the VGG architecture.
+        Paper introducing the architecture: https://arxiv.org/abs/1409.1556
+    """
+
+    def __init__(self, sensor, modality_net_config_dict, sample_batch):
+        """
+            Init method for the Template_ModalityNet.
+
+            Parameters:
+                - sensor (string): Name of the sensor for which this modality net is used
+                - modality_net_config_dict (dict): Dict containing the modality net specific configuration parameters
+                - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
+        """
+        # #### call init method of superclass
+        super().__init__(sensor, modality_net_config_dict)
+
+        # #### check whether input is compatible
+        self.confirm_input_is_an_image(sample_batch)
+
+        # #### define layers
+        kernel_size = 3
+        self.conv1_1 = nn.Conv2d(3, 16, kernel_size)
+        self.conv1_2 = nn.Conv2d(16, 16, kernel_size)
+        self.pool1 = nn.MaxPool2d(2, 2)
+
+        self.conv2_1 = nn.Conv2d(16, 64, kernel_size)
+        self.conv2_2 = nn.Conv2d(64, 64, kernel_size)
+        self.pool2 = nn.MaxPool2d(2, 2)
+
+        self.conv3_1 = nn.Conv2d(64, 128, kernel_size)
+        self.conv3_2 = nn.Conv2d(128, 128, kernel_size)
+        self.pool3 = nn.MaxPool2d(2, 2)
+
+        self.gap = nn.AdaptiveAvgPool2d(1)
+        self.flatten = nn.Flatten()
+
+        # #### calculate shape of output of the modality net based on sample batch
+        self.calculate_features_from_sample_batch(sample_batch)
+
+    def forward(self, data_dict):
+        """
+            Implementation of forward() method to process data.
+
+            Parameters:
+                - data_dict (torch.Tensor): Batch from dataset to process
+
+            Returns:
+                - x (torch.Tensor): Representation vector after processing the data
+        """
+        x = data_dict[self.sensor]
+        
+        x = F.relu(self.conv1_1(x))
+        x = self.pool1(F.relu(self.conv1_2(x)))
+
+        x = F.relu(self.conv2_1(x))
+        x = self.pool2(F.relu(self.conv2_2(x)))
+
+        x = F.relu(self.conv3_1(x))
+        x = self.pool3(F.relu(self.conv3_2(x)))
+
+        x = self.gap(x)
+        x = self.flatten(x)
+        return x
+
 # class Template_ModalityNet(ModalityNetBaseClass):
 #     """
 #         Template modality net as baseline for new modality nets.
 #     """
 
-#     def __init__(self, sensor, model_config_dict, sample_batch):
+#     def __init__(self, sensor, modality_net_config_dict, sample_batch):
 #         """
 #             Init method for the Template_ModalityNet.
 
 #             Parameters:
 #                 - sensor (string): Name of the sensor for which this modality net is used
-#                 - model_config_dict (dict): Dict which contains all configuration parameters for the model
+#                 - modality_net_config_dict (dict): Dict containing the modality net specific configuration parameters
 #                 - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
 #         """
 #         # #### call init method of superclass
-#         super().__init__(sensor, model_config_dict)
+#         super().__init__(sensor, modality_net_config_dict)
 
 #         # #### check whether input is compatible
 #         # TODO: uncomment wanted check and remove the other one

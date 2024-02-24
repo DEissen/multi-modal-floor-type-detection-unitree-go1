@@ -9,7 +9,28 @@
    "visualize_results": false,
    "train_log_interval": 200,
    "model": {
-      "dropout_rate": 0.2
+      "modality_net": {
+         "list of supported types NOT USED BY PROGRAM": [
+            "LeNetLike",
+            "VggLike"
+         ],
+         "type": "LeNetLike"
+      },
+      "fusion_model": {
+         "list of supported types NOT USED BY PROGRAM": [
+            "concat",
+            "TODO"
+         ],
+         "type": "concat"
+      },
+      "classification_head": {
+         "list of supported types NOT USED BY PROGRAM": [
+            "dense",
+            "TODO"
+         ],
+         "type": "dense",
+         "dropout_rate": 0.2
+      }
    },
    "list of all supported sensors NOT USED BY PROGRAM": [
       "accelerometer",
@@ -32,7 +53,7 @@
       "yawSpeed"
    ],
    "sensors": [
-      "accelerometer"
+      "BellyCamLeft"
    ],
    "train_dataset_path": "D:\\MA_Daten\\FTDD1.6\\train",
    "test_dataset_path": "D:\\MA_Daten\\FTDD1.6\\test"

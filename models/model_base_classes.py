@@ -93,18 +93,18 @@ class ModalityNetBaseClass(ModelBaseClass):
         Base class for all modality nets.
     """
 
-    def __init__(self, sensor, model_config_dict):
+    def __init__(self, sensor, modality_net_config_dict):
         """
             Init method of ModalityNetBaseClass() class.
 
             Parameters:
                 - sensor (str): Name of the sensor for which this modality net is used
-                - model_config_dict (dict): Dict which contains all configuration parameters for the model
+                - modality_net_config_dict (dict): Dict containing the modality net specific configuration parameters
         """
         super().__init__()
 
         self.sensor = sensor
-        self.model_config_dict = model_config_dict
+        self.modality_net_config_dict = modality_net_config_dict
 
     def forward(self, data_dict):
         """

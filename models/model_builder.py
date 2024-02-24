@@ -9,7 +9,7 @@ if __name__ == "__main__":
 else:
     from models.classification_heads import Dense_ClassificationHead
     from models.fusion_models import Concatenate_FusionModel
-    from models.modality_nets import LeNet2dLike_ModalityNet, LeNet1dLike_ModalityNet
+    from models.modality_nets import LeNet2dLike_ModalityNet, LeNet1dLike_ModalityNet, VggLike_ModalityNet
 
 
 def model_builder(num_classes, sensors, dataset, model_config_dict):
@@ -32,19 +32,48 @@ def model_builder(num_classes, sensors, dataset, model_config_dict):
     # define modality nets
     modality_nets = torch.nn.ModuleDict()
     for sensor in sensors:
-        if "Cam" in sensor:
-            modality_nets[sensor] = LeNet2dLike_ModalityNet(
-                sensor, model_config_dict, sample_batch)
-        else:
-            modality_nets[sensor] = LeNet1dLike_ModalityNet(
-                sensor, model_config_dict, sample_batch)
+        modality_nets[sensor] = get_modality_net_based_on_config(sensor, model_config_dict["modality_net"], sample_batch)
 
     # define fusion model
     fusion_model = Concatenate_FusionModel(
-        sensors, model_config_dict, modality_nets, sample_batch)
+        sensors, model_config_dict["fusion_model"], modality_nets, sample_batch)
 
     # define final model
     final_model = Dense_ClassificationHead(
-        num_classes, sensors, model_config_dict, fusion_model)
+        num_classes, sensors, model_config_dict["classification_head"], fusion_model)
 
     return final_model
+
+def get_modality_net_based_on_config(sensor, modality_net_config_dict, sample_batch):
+    """
+        Function to return modality net for sensor based on config in modality_net_config_dict.
+
+        Parameters:
+            - sensor (str): Name of the sensor from the dataset
+            - modality_net_config_dict (dict): Dict containing the modality net specific configuration parameters
+            - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
+
+        Returns:
+            - modality_net (subclass of ModalityNetBaseClass): Modality net for the sensor
+    """
+    # initialize modality net with None for later check whether modality net was created
+    modality_net = None
+    
+    # select modality net for cameras
+    if "Cam" in sensor:
+        if modality_net_config_dict["type"] == "LeNetLike":
+            modality_net = LeNet2dLike_ModalityNet(
+                sensor, modality_net_config_dict, sample_batch)
+        if modality_net_config_dict["type"] == "VggLike":
+            modality_net = VggLike_ModalityNet(
+                sensor, modality_net_config_dict, sample_batch)
+    # select modality net for timeseries data 
+    else:
+        modality_net = LeNet1dLike_ModalityNet(
+            sensor, modality_net_config_dict, sample_batch)
+    
+    # raise Exception in case modality net creation failed (due to missing/ wrong configuration)
+    if modality_net == None:
+        raise RuntimeError(f"Modality net selection for {sensor} was not successful. Please check the configuration!")
+
+    return modality_net
