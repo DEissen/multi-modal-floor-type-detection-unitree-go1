@@ -8,6 +8,7 @@
    "use_wandb": true,
    "visualize_results": false,
    "train_log_interval": 200,
+
    "model": {
       "modality_net": {
          "list of supported types NOT USED BY PROGRAM": [
@@ -90,6 +91,6 @@
       "BellyCamLeft"
    ],
 
-   "train_dataset_path": "D:\\MA_Daten\\FTDD1.6\\train",
-   "test_dataset_path": "D:\\MA_Daten\\FTDD1.6\\test"
+   "train_dataset_path": "D:\\MA_Daten\\FTDD1.7\\train",
+   "test_dataset_path": "D:\\MA_Daten\\FTDD1.7\\test"
 }
