@@ -12,10 +12,22 @@
    "model": {
       "modality_net": {
          "list of supported types NOT USED BY PROGRAM": [
+            "PatchTokenization",
             "LeNetLike",
             "VggLike"
          ],
-         "type": "LeNetLike"
+         "type": "LeNetLike",
+
+         "PatchTokenization": {
+            "list of image_tokenization_strategy NOT USED BY PROGRAM": [
+               "vit",
+               "metaTransformer"
+            ],
+            "image_tokenization_strategy": "vit",
+            "patch_size": 16,
+            "embed_dim": 32
+
+         }
       },
 
       "fusion_model": {
@@ -43,7 +55,7 @@
                "relu",
                "gelu"
             ],
-            "act_fct": "relu",
+            "act_fct": "gelu",
             "pe_dropout": 0.0,
 
             "cross_num_heads": 2,

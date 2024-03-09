@@ -38,7 +38,7 @@ class Concatenate_FusionModel(FusionModelBaseClass):
             Returns:
                 - x (torch.Tensor): Representation vector after processing the data
         """
-        # ### get the result of each feature head
+        # ### get the result of each modality net
         cat_input = []  # list for inputs for feature concatenation
         for sensor in self.sensors:
             # append output/ extracted features for sensor to the concatenation list
@@ -72,6 +72,17 @@ class CrossModalTransformer_FusionModel(FusionModelBaseClass):
         # #### call init method of superclass
         super().__init__(sensors, fusion_model_config_dict, modality_nets)
 
+        # #### check whether at least two sensors are provided
+        if len(sensors) < 2:
+            raise TypeError(f"CrossModalTransformer_FusionModel can only be used in multi-modal context (at least two sensors must be provided)!") 
+
+        # #### check whether modality_nets are compatible
+        for sensor in sensors:
+            modality_net_embed_dim = modality_nets[sensor].get_shape_output_features()[1]
+            
+            if fusion_model_config_dict['CrossModalTransformer']['embed_dim'] != modality_net_embed_dim:
+                raise TypeError(f"Embedding dimension does not fit for modality net of {sensor}!") 
+
         # #### get combinations for cross-modal Transformers based on configured method
         if fusion_model_config_dict["CrossModalTransformer"]["fusion_strategy"] == "highMMT":
             self.fusion_combinations = self.__get_highMMT_combinations(sensors)
@@ -79,7 +90,7 @@ class CrossModalTransformer_FusionModel(FusionModelBaseClass):
             self.fusion_combinations = self.__get_MulT_combinations(sensors)
         else:
             raise TypeError(
-                f"Fusion strategy for CrossModalTransformer_Fusion Model is {fusion_model_config_dict['act_fct']} which is not a valid value!")
+                f"Fusion strategy for CrossModalTransformer_Fusion Model is {fusion_model_config_dict['CrossModalTransformer']['fusion_strategy']} which is not a valid value!")
 
         # #### define layers
         # CrossModalTransformers are organized in multimodal streams, where in each stream the output of multiple CrossModalTransformers is concatenated based on the fusion strategy
@@ -115,8 +126,12 @@ class CrossModalTransformer_FusionModel(FusionModelBaseClass):
             Returns:
                 - x (torch.Tensor): Representation vector after processing the data
         """
-        # ### modality nets part
-        # TODO
+        # ### get the result of each modality net
+        modality_net_outputs = {}
+        for sensor in self.sensors:
+            # append output/ extracted features for sensor to the concatenation list
+            modality_net_outputs[sensor] = self.modality_nets[sensor](
+                data_dict)
 
         # ### fusion model part
         multimodal_stream_outputs = []
@@ -130,7 +145,7 @@ class CrossModalTransformer_FusionModel(FusionModelBaseClass):
                 source_sensor, target_sensor = key.split("=>")
 
                 x = multimodal_stream[key](
-                    data_dict[target_sensor], data_dict[source_sensor], target_sensor, source_sensor)
+                    modality_net_outputs[target_sensor], modality_net_outputs[source_sensor], target_sensor, source_sensor)
 
                 multimodal_stream_output.append(x)
 

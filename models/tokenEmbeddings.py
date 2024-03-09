@@ -24,3 +24,14 @@ def create_patch_sequence_for_image(img: torch.Tensor, patch_size: int):
         (num_patches, patches.shape[3], patches.shape[4], patches.shape[5]))
 
     return patch_seq
+
+def flatten_patches(img_patches):
+    # TODO: docu
+    num_patches = img_patches.shape[0]
+    size_flatten_patch = img_patches.shape[1] * img_patches.shape[2] * img_patches.shape[3]
+
+    res = torch.zeros(num_patches, size_flatten_patch, dtype=torch.float32)
+    for num_patch in range(num_patches):
+        res[num_patch] = img_patches[num_patch].flatten()
+
+    return res

@@ -76,13 +76,13 @@ class ModelBaseClass(nn.Module):
 
     def __get_shape_output_features(self, sample_batch):
         """
-            Private method to get the shape of the models output based on a sample_batch
+            Private method to get the shape of the models output based on a sample_batch without batch dim.
 
             Parameters:
                 - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
 
             Returns:
-                - (torch.Tensor): Shape of the output of the model
+                - (torch.Tensor): Shape of the output of the model without batch dim
         """
         x = self.forward(sample_batch)
         return x.size()[1:]
