@@ -34,6 +34,10 @@ class CrossModalTransformer(nn.Module):
         # #### define layers
         self.pe = VanillaPositionalEncoding(
             config_dict["embed_dim"], config_dict["pe_dropout"])
+        
+        # add class token if configured
+        if config_dict["use_class_token"]:
+            self.class_token = nn.Parameter(torch.rand(1, config_dict["embed_dim"]))
 
         self.transformer_blocks = nn.ModuleList([])
         for block in range(config_dict["num_blocks"]):
@@ -63,6 +67,12 @@ class CrossModalTransformer(nn.Module):
             raise TypeError(
                 f"CrossModalTransformer(Layer) for {self.source_sensor+'=>'+self.target_sensor} received wrong data for: {source_sensor+'=>'+target_sensor}!")
 
+        # ## add class Token to both input sequences if configured to be used
+        # implementation of class Token based on https://medium.com/@brianpulfer/vision-transformers-from-scratch-pytorch-a-step-by-step-guide-96c3313c2e0c
+        if self.config_dict["use_class_token"]:
+            target_sensor_data = torch.stack([torch.vstack((self.class_token, target_sensor_data[i])) for i in range(len(target_sensor_data))])
+            target_sensor_data = torch.stack([torch.vstack((self.class_token, target_sensor_data[i])) for i in range(len(target_sensor_data))])
+
         # ## add PE to the input
         x_q = self.pe(target_sensor_data)
         x_k_v = self.pe(source_sensor_data)
@@ -71,6 +81,10 @@ class CrossModalTransformer(nn.Module):
         for transformer_block in self.transformer_blocks:
             # later transformer blocks will use updated x_q but still raw x_k_v
             x_q = transformer_block(x_q, x_k_v)
+
+        # ## if class token is used, only the class token shall be returned as output
+        if self.config_dict["use_class_token"]:
+            x_q = x_q[:, 0, :]
 
         return x_q
 
