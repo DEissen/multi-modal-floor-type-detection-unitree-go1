@@ -113,8 +113,7 @@ class CrossModalTransformer_FusionModel(FusionModelBaseClass):
             self.multimodal_streams.append(multimodal_stream)
 
         # #### calculate shape of output of the fusion model based on sample batch
-        # TODO: Overwrite function or check whether it is working when properly implemented
-        # self.calculate_features_from_sample_batch(sample_batch)
+        self.calculate_features_from_sample_batch(sample_batch)
 
     def forward(self, data_dict):
         """
@@ -152,8 +151,17 @@ class CrossModalTransformer_FusionModel(FusionModelBaseClass):
             # append concatenated results (concatenated in embed_dim as suggested by MulT (https://arxiv.org/pdf/1906.00295.pdf)) to multimodal_stream_outputs
             multimodal_stream_outputs.append(
                 torch.cat(multimodal_stream_output, dim=2))
+        
+        # concatenate results of all multi-modal streams and flatten the result (important if whole sequence is used)
+        output = torch.cat(multimodal_stream_outputs, dim=2)
+        output = output.view(output.size(0), -1)
 
-        return multimodal_stream_outputs
+        # # optionally use Batch Normalization on results as suggested by HighMMT (https://arxiv.org/pdf/2203.01311.pdf)
+        # NOTE: Not supported yet, as BN must be initialized with number of parameters provided which is not easily possible!
+        # if self.fusion_model_config_dict["CrossModalTransformer"]["norm_output"]:
+        #     output = output
+
+        return output
 
     def __get_highMMT_combinations(self, sensors):
         """

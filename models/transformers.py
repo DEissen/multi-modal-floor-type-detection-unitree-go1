@@ -84,7 +84,7 @@ class CrossModalTransformer(nn.Module):
 
         # ## if class token is used, only the class token shall be returned as output
         if self.config_dict["use_class_token"]:
-            x_q = x_q[:, 0, :]
+            x_q = x_q[:, 0, :].reshape((x_q.shape[0], 1, x_q.shape[2]))
 
         return x_q
 

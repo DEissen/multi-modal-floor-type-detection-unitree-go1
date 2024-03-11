@@ -136,7 +136,7 @@ def get_final_model_based_on_config(num_classes, sensors, classification_head_co
     # initialize modality net with None for later check whether modality net was created
     final_model = None
 
-    if classification_head_config_dict["type"] == "conventionalDense":
+    if classification_head_config_dict["type"] == "dense":
         final_model = Dense_ClassificationHead(
             num_classes, sensors, classification_head_config_dict, fusion_model)
 
