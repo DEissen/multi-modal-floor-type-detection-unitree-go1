@@ -4,6 +4,7 @@ import logging
 import json
 import os.path as path
 import datetime
+import subprocess
 
 
 def gen_run_dir(present_run_path=""):
@@ -175,6 +176,7 @@ def save_struct_as_json(new_file_path, dict_to_save):
     with open(new_file_path, "w") as fp:
         json.dump(dict_to_save, fp, indent=3)
 
+
 def get_run_name_for_logging(sensors, model):
     """
         Function to get name for logging which summarizes the run.
@@ -189,20 +191,20 @@ def get_run_name_for_logging(sensors, model):
     display_name = ""
     num_cams = 0
     num_timeseries = 0
-    
+
     # get amount von cameras and timeseries data from sensors for short name
     for sensor in sensors:
         if "Cam" in sensor:
-            num_cams +=1
+            num_cams += 1
         else:
             num_timeseries += 1
 
     if num_cams > 0:
         display_name += f"{num_cams}c"
-        
+
     if num_timeseries > 0:
         display_name += f"{num_timeseries}t"
-    
+
     # add few details about model to name
     if len(sensors) == 1:
         # for uni-modal models the name of the sensor is most important
@@ -218,6 +220,17 @@ def get_run_name_for_logging(sensors, model):
 
     # append date and time of run to name
     display_name += datetime.datetime.now().strftime(
-                '_%d.%m_%H:%M:%S')
-    
+        '_%d.%m_%H:%M:%S')
+
     return display_name
+
+
+def get_git_revision_hash() -> str:
+    """
+        Function to get hash of git currently checked out git commit.
+        Implementation taken from: https://stackoverflow.com/questions/14989858/get-the-current-git-hash-in-a-python-script
+
+        Returns:
+            (str): Full hash of checked out commit of the repo
+    """
+    return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()

@@ -8,7 +8,8 @@ import os
 
 # custom imports
 from metrics.confusion_matrix import ConfusionMatrix
-from custom_utils.utils import get_run_name_for_logging
+from custom_utils.utils import get_run_name_for_logging, get_git_revision_hash
+
 
 class Trainer():
     """
@@ -82,6 +83,17 @@ class Trainer():
             Method to start the training of the model, including evaluation and logging during training.
         """
         logging.info('######### Start training #########')
+
+        # log checked out git hash of training in run_paths logs path
+        git_hash_file_path = os.path.join(
+            self.run_paths_dict["logs_path"], "git_hash.txt")
+
+        git_hash = get_git_revision_hash()
+        logging.info(f"Training is done based on commit '{git_hash}'")
+
+        with open(git_hash_file_path, mode="w") as f:
+            f.write(git_hash)
+
         # check and log used device for training
         device = (
             "cuda"
