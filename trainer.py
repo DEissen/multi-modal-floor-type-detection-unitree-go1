@@ -3,13 +3,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-import datetime
 import logging
 import os
 
 # custom imports
 from metrics.confusion_matrix import ConfusionMatrix
-
+from custom_utils.utils import get_run_name_for_logging
 
 class Trainer():
     """
@@ -46,12 +45,7 @@ class Trainer():
             wandb.login()
 
             # create name of run based on current time and number of sensors
-            display_name = datetime.datetime.now().strftime(
-                '%d.%m_%H:%M:%S')
-            if len(self.sensors) == 1:
-                display_name += f"_{self.sensors[0]}"
-            else:
-                display_name += "_multimod"
+            display_name = get_run_name_for_logging(sensors, model)
 
             wandb.init(project="MA", entity="st177975", dir=self.run_paths_dict["wandb_path"],
                        config=self.config_dict, name=display_name, resume="auto")
