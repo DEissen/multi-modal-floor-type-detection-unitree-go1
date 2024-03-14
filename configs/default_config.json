@@ -120,5 +120,6 @@
    ],
 
    "train_dataset_path": "D:\\MA_Daten\\FTDD1.8\\train",
-   "test_dataset_path": "D:\\MA_Daten\\FTDD1.8\\val"
+   "val_dataset_path": "D:\\MA_Daten\\FTDD1.8\\val",
+   "test_dataset_path": "D:\\MA_Daten\\FTDD1.8\\test"
 }
