@@ -8,7 +8,8 @@ from models.tokenEmbeddings import flatten_patches, create_patch_sequence_for_im
 
 class ImagePatchTokenization_ModalityNet(ModalityNetBaseClass):
     """
-        Template modality net as baseline for new modality nets.
+        Modality net based for patch tokenization of images for creating a sequence of 1D embedding vectors for transformers.
+        Supports tokenization strategy from ViT (https://arxiv.org/pdf/2010.11929.pdf) and Meta Transformer (https://arxiv.org/pdf/2307.10802.pdf).
     """
 
     def __init__(self, sensor, modality_net_config_dict, sample_batch):
@@ -81,6 +82,59 @@ class ImagePatchTokenization_ModalityNet(ModalityNetBaseClass):
 
         elif self.modality_net_config_dict["PatchTokenization"]["image_tokenization_strategy"] == "metaTransformer":
             pass
+
+        return x
+
+class TimeseriesTokenization_ModalityNet(ModalityNetBaseClass):
+    """
+        Modality net based for creating a sequence of 1D embedding vectors for transformers.
+        Using LeNet1dLike_ModalityNet() as feature extractor.
+    """
+
+    def __init__(self, sensor, modality_net_config_dict, sample_batch):
+        """
+            Init method for the TimeseriesPatchTokenization_ModalityNet.
+
+            Parameters:
+                - sensor (string): Name of the sensor for which this modality net is used
+                - modality_net_config_dict (dict): Dict containing the modality net specific configuration parameters
+                - sample_batch (torch.Tensor): One batch from the dataset the model shall be used for
+        """
+        # #### call init method of superclass
+        super().__init__(sensor, modality_net_config_dict)
+
+        # #### check whether input is compatible
+        self.confirm_input_is_timeseries_data(sample_batch)
+
+        # #### define layers
+        if modality_net_config_dict["PatchTokenization"]["timeseries_tokenization_strategy"] == "LeNetLike":
+            # use LeNet1dLike_ModalityNet with additional linear layer to project representation to embedding dimension
+            self.le_net_like = LeNet1dLike_ModalityNet(sensor, modality_net_config_dict, sample_batch)
+            patch_dim = self.le_net_like.get_shape_output_features()[1]
+            self.linear = nn.Linear(patch_dim, modality_net_config_dict["PatchTokenization"]["embed_dim"], bias=False)
+
+        else:
+            raise TypeError(
+                f"Image tokenization strategy for TimeseriesPatchTokenization_ModalityNet Model is {modality_net_config_dict['PatchTokenization']['timeseries_tokenization_strategy']} which is not a valid value!")
+
+        # #### calculate shape of output of the modality net based on sample batch
+        self.calculate_features_from_sample_batch(sample_batch)
+
+    def forward(self, data_dict):
+        """
+            Implementation of forward() method to process data.
+
+            Parameters:
+                - data_dict (torch.Tensor): Batch from dataset to process
+
+            Returns:
+                - x (torch.Tensor): Representation vector after processing the data
+        """
+        # ## rest of the image tokenization is different for configurable strategies
+        if self.modality_net_config_dict["PatchTokenization"]["timeseries_tokenization_strategy"] == "LeNetLike":
+            x = self.le_net_like(data_dict)
+
+            x = self.linear(x)
 
         return x
 

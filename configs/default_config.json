@@ -24,6 +24,10 @@
                "metaTransformer"
             ],
             "image_tokenization_strategy": "vit",
+            "list of timeseries_tokenization_strategy NOT USED BY PROGRAM": [
+               "LeNetLike"
+            ],
+            "timeseries_tokenization_strategy": "LeNetLike",
             "patch_size": 16,
             "embed_dim": 32
 
@@ -115,6 +119,6 @@
       "BellyCamLeft"
    ],
 
-   "train_dataset_path": "D:\\MA_Daten\\FTDD1.7\\train",
-   "test_dataset_path": "D:\\MA_Daten\\FTDD1.7\\test"
+   "train_dataset_path": "D:\\MA_Daten\\FTDD1.8\\train",
+   "test_dataset_path": "D:\\MA_Daten\\FTDD1.8\\val"
 }
