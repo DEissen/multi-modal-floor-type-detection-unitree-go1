@@ -11,7 +11,6 @@ def sweep_wrapper():
         Wrapper for main() function to handle update of configuration parameters for hyperparameter optimization with wandb.
     """
     # create logger and run_path for this sweep
-    logger = CustomLogger()
     run_path_dict = gen_run_dir()
     run_path = run_path_dict["run_path"]
 
@@ -31,8 +30,7 @@ def sweep_wrapper():
     train_config_dict = update_config_dict_with_wandb_config(
         train_config_dict)
 
-    main(run_path=run_path, logger=logger,
-         train_config_dict=train_config_dict)
+    main(run_path=run_path, train_config_dict=train_config_dict)
 
 
 def update_config_dict_with_wandb_config(train_config_dict):

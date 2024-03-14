@@ -37,9 +37,11 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     # load config based on run_path if no train_config_dict was provided
     if train_config_dict == None:
         train_config_dict = load_run_path_config(run_path)
+        perform_wandb_sweep = False
     else:
         # hyperparameter optimization is running an run_path must be set to empty string again for dataset
         run_path = ""
+        perform_wandb_sweep = True
     train_dataset_path = train_config_dict["train_dataset_path"]
     test_dataset_path = train_config_dict["test_dataset_path"]
     if sensors == None:
@@ -64,7 +66,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     if perform_training:
         # training loop
         trainer = Trainer(model, ds_train, ds_test, sensors,
-                          train_config_dict, run_paths_dict)
+                          train_config_dict, run_paths_dict, perform_wandb_sweep)
         trainer.train()
     else:
         # load trained model if no training shall be done

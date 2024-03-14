@@ -137,6 +137,9 @@ class CustomLogger():
             self.stream_handler = logging.StreamHandler()
             self.logger.addHandler(self.stream_handler)
 
+        # prevent some useless logging to be plotted from urllib3 unless it's at least a warning
+        logging.getLogger("urllib3").setLevel(logging.WARNING)
+
 
 def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict, faulty_data_creation_config_dict):
     """
