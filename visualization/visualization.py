@@ -1,6 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from math import sqrt
 
+def visualize_img_as_path_seq(patch_seq):
+    """
+        Visualize the Patch sequence of a single image (not a whole batch!) expected in shape [seq_len, c, h, w]
+
+        Parameters:
+            - patch_seq (torch.Tensor): Sequence of patches from a single image.
+    """
+    axis_size = int(sqrt(patch_seq.shape[0]))
+
+    fig = plt.figure(figsize=(axis_size, axis_size))
+
+    for i in range(patch_seq.shape[0]):
+        patch_as_img = np.transpose(patch_seq[i], (1, 2, 0))
+
+        ax = fig.add_subplot(axis_size, axis_size, i+1, xticks=[], yticks=[])
+        plt.imshow(patch_as_img)
 
 def visualize_data_sample_or_batch(data_dict, label=None, prediction=None):
     """

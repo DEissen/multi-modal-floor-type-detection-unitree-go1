@@ -5,33 +5,95 @@
    "lr": 0.001,
    "momentum": 0.9,
    "num_classes": 6,
-   "use_wandb": true,
+   "use_wandb": false,
    "visualize_results": false,
    "train_log_interval": 200,
+
    "model": {
       "modality_net": {
          "list of supported types NOT USED BY PROGRAM": [
+            "PatchTokenization",
             "LeNetLike",
             "VggLike"
          ],
-         "type": "LeNetLike"
+         "type": "PatchTokenization",
+
+         "PatchTokenization": {
+            "list of image_tokenization_strategy NOT USED BY PROGRAM": [
+               "vit",
+               "metaTransformer"
+            ],
+            "image_tokenization_strategy": "vit",
+            "list of timeseries_tokenization_strategy NOT USED BY PROGRAM": [
+               "LeNetLike"
+            ],
+            "timeseries_tokenization_strategy": "LeNetLike",
+            "patch_size": 16,
+            "embed_dim": 32
+
+         }
       },
+
       "fusion_model": {
          "list of supported types NOT USED BY PROGRAM": [
             "concat",
-            "TODO"
+            "CrossModalTransformer"
          ],
-         "type": "concat"
+         "type": "CrossModalTransformer",
+
+         "CrossModalTransformer": {
+            "list of fusion_strategy NOT USED BY PROGRAM": [
+               "mult",
+               "highMMT"
+            ],
+            "fusion_strategy": "mult",
+            "num_blocks": 2,
+            "embed_dim": 32,
+            "use_class_token": true,
+            "list of pe_type NOT USED BY PROGRAM": [
+               "fixed",
+               "TODO"
+            ],
+            "pe_type": "fixed",
+            "list of act_fct NOT USED BY PROGRAM": [
+               "relu",
+               "gelu"
+            ],
+            "act_fct": "gelu",
+            "pe_dropout": 0.0,
+
+            "cross_num_heads": 2,
+            "cross_attn_dropout": 0.0,
+            
+            "use_latent_self_attn": true,
+            "latent_num_heads": 2,
+            "latent_attn_dropout": 0.0,
+
+            "ffn_dropout": 0.0
+         }
       },
+
       "classification_head": {
          "list of supported types NOT USED BY PROGRAM": [
             "dense",
             "TODO"
          ],
          "type": "dense",
-         "dropout_rate": 0.2
+         "dropout_rate": 0.2,
+
+         "dense": {
+            "num_hidden_layers": 2,
+            "dropout_at_layer_index": [0],
+            "neurons_at_layer_index": [128, 64],
+            "list of act_fct NOT USED BY PROGRAM": [
+               "relu",
+               "gelu"
+            ],
+            "act_fct": "relu"
+         }
       }
    },
+
    "list of all supported sensors NOT USED BY PROGRAM": [
       "accelerometer",
       "BellyCamLeft",
@@ -53,8 +115,10 @@
       "yawSpeed"
    ],
    "sensors": [
+      "HeadCamLeft",
       "BellyCamLeft"
    ],
-   "train_dataset_path": "D:\\MA_Daten\\FTDD1.6\\train",
-   "test_dataset_path": "D:\\MA_Daten\\FTDD1.6\\test"
+
+   "train_dataset_path": "D:\\MA_Daten\\FTDD1.8\\train",
+   "test_dataset_path": "D:\\MA_Daten\\FTDD1.8\\val"
 }

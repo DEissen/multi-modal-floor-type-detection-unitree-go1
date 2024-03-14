@@ -4,12 +4,12 @@ from torch.utils.data import DataLoader
 # custom imports
 if __name__ == "__main__":
     from classification_heads import Dense_ClassificationHead
-    from fusion_models import Concatenate_FusionModel
-    from modality_nets import LeNet2dLike_ModalityNet
+    from fusion_models import Concatenate_FusionModel, CrossModalTransformer_FusionModel
+    from modality_nets import LeNet2dLike_ModalityNet, LeNet1dLike_ModalityNet, VggLike_ModalityNet, ImagePatchTokenization_ModalityNet, TimeseriesTokenization_ModalityNet
 else:
     from models.classification_heads import Dense_ClassificationHead
-    from models.fusion_models import Concatenate_FusionModel
-    from models.modality_nets import LeNet2dLike_ModalityNet, LeNet1dLike_ModalityNet, VggLike_ModalityNet
+    from models.fusion_models import Concatenate_FusionModel, CrossModalTransformer_FusionModel
+    from models.modality_nets import LeNet2dLike_ModalityNet, LeNet1dLike_ModalityNet, VggLike_ModalityNet, ImagePatchTokenization_ModalityNet, TimeseriesTokenization_ModalityNet
 
 
 def model_builder(num_classes, sensors, dataset, model_config_dict):
@@ -69,10 +69,20 @@ def get_modality_net_based_on_config(sensor, modality_net_config_dict, sample_ba
         elif modality_net_config_dict["type"] == "VggLike":
             modality_net = VggLike_ModalityNet(
                 sensor, modality_net_config_dict, sample_batch)
+        elif modality_net_config_dict["type"] == "PatchTokenization":
+            modality_net = ImagePatchTokenization_ModalityNet(
+                sensor, modality_net_config_dict, sample_batch)
     # select modality net for timeseries data
     else:
-        modality_net = LeNet1dLike_ModalityNet(
-            sensor, modality_net_config_dict, sample_batch)
+        if modality_net_config_dict["type"] == "LeNetLike":
+            modality_net = LeNet1dLike_ModalityNet(
+                sensor, modality_net_config_dict, sample_batch)
+        elif modality_net_config_dict["type"] == "VggLike":
+            raise TypeError(
+                "Modality Net \"VggLike\" is not supported for timeseries data!")
+        elif modality_net_config_dict["type"] == "PatchTokenization":
+            modality_net = TimeseriesTokenization_ModalityNet(
+                sensor, modality_net_config_dict, sample_batch)
 
     # raise Exception in case modality net creation failed (due to missing/ wrong configuration)
     if modality_net == None:
@@ -99,6 +109,9 @@ def get_fusion_model_based_on_config(sensors, fusion_model_config_dict, modality
 
     if fusion_model_config_dict["type"] == "concat":
         fusion_model = Concatenate_FusionModel(
+            sensors, fusion_model_config_dict, modality_nets, sample_batch)
+    elif fusion_model_config_dict["type"] == "CrossModalTransformer":
+        fusion_model = CrossModalTransformer_FusionModel(
             sensors, fusion_model_config_dict, modality_nets, sample_batch)
 
     # raise Exception in case modality net creation failed (due to missing/ wrong configuration)

@@ -3,12 +3,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-import datetime
 import logging
 import os
 
 # custom imports
 from metrics.confusion_matrix import ConfusionMatrix
+from custom_utils.utils import get_run_name_for_logging, get_git_revision_hash
 
 
 class Trainer():
@@ -46,12 +46,7 @@ class Trainer():
             wandb.login()
 
             # create name of run based on current time and number of sensors
-            display_name = datetime.datetime.now().strftime(
-                '%d.%m_%H:%M:%S')
-            if len(self.sensors) == 1:
-                display_name += f"_{self.sensors[0]}"
-            else:
-                display_name += "_multimod"
+            display_name = get_run_name_for_logging(sensors, model)
 
             wandb.init(project="MA", entity="st177975", dir=self.run_paths_dict["wandb_path"],
                        config=self.config_dict, name=display_name, resume="auto")
@@ -88,6 +83,17 @@ class Trainer():
             Method to start the training of the model, including evaluation and logging during training.
         """
         logging.info('######### Start training #########')
+
+        # log checked out git hash of training in run_paths logs path
+        git_hash_file_path = os.path.join(
+            self.run_paths_dict["logs_path"], "git_hash.txt")
+
+        git_hash = get_git_revision_hash()
+        logging.info(f"Training is done based on commit '{git_hash}'")
+
+        with open(git_hash_file_path, mode="w") as f:
+            f.write(git_hash)
+
         # check and log used device for training
         device = (
             "cuda"
