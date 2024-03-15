@@ -27,17 +27,23 @@ class ImagePatchTokenization_ModalityNet(ModalityNetBaseClass):
         # #### check whether input is compatible
         self.confirm_input_is_an_image(sample_batch)
 
-        # #### get shape of flatten patches for ViT strategy
-        patch_size = modality_net_config_dict["PatchTokenization"]["patch_size"]
-        patch_dim = flatten_patches(create_patch_sequence_for_image(sample_batch[self.sensor][0], patch_size)).shape[1]
-
         # #### define layers
         if modality_net_config_dict["PatchTokenization"]["image_tokenization_strategy"] == "vit":
+            # get shape of flatten patches for ViT strategy
+            patch_size = modality_net_config_dict["PatchTokenization"]["patch_size"]
+            patch_dim = flatten_patches(create_patch_sequence_for_image(
+                sample_batch[self.sensor][0], patch_size)).shape[1]
+
             # linear layer (= without bias) for linear projection of patches to embedding dim according to ViT (https://arxiv.org/pdf/2010.11929.pdf)
-            self.linear = nn.Linear(patch_dim, modality_net_config_dict["PatchTokenization"]["embed_dim"], bias=False)
+            self.linear = nn.Linear(
+                patch_dim, modality_net_config_dict["PatchTokenization"]["embed_dim"], bias=False)
 
         elif modality_net_config_dict["PatchTokenization"]["image_tokenization_strategy"] == "metaTransformer":
-            pass
+            # implementation based on https://github.com/invictus717/MetaTransformer/blob/master/Data2Seq/Image.py
+            patch_size = modality_net_config_dict["PatchTokenization"]["patch_size"]
+            patch_size = (patch_size, patch_size)
+            self.proj_conv = nn.Conv2d(
+                3, modality_net_config_dict["PatchTokenization"]["embed_dim"], kernel_size=patch_size, stride=patch_size)
 
         else:
             raise TypeError(
@@ -56,24 +62,33 @@ class ImagePatchTokenization_ModalityNet(ModalityNetBaseClass):
             Returns:
                 - x (torch.Tensor): Representation vector after processing the data
         """
-        # ## transform images to patches first for complete batch
+        # ## common part
         x = data_dict[self.sensor]
-        batch_size = x.shape[0]
-
-        patches_first_batch = create_patch_sequence_for_image(x[0], self.modality_net_config_dict["PatchTokenization"]["patch_size"])
-        num_patches = patches_first_batch.shape[0]
-
-        patches_for_all_batches = torch.zeros(batch_size, num_patches, patches_first_batch.shape[1], patches_first_batch.shape[2], patches_first_batch.shape[3])
-        patches_for_all_batches[0] = patches_first_batch
-
-        for i in range(1, batch_size):
-            patches_for_all_batches[i] =  create_patch_sequence_for_image(x[i], self.modality_net_config_dict["PatchTokenization"]["patch_size"])
 
         # ## rest of the image tokenization is different for configurable strategies
         if self.modality_net_config_dict["PatchTokenization"]["image_tokenization_strategy"] == "vit":
-            size_flatten_patch = patches_for_all_batches[0].shape[1] * patches_for_all_batches[0].shape[2] * patches_for_all_batches[0].shape[3]
+            # transform images to patches first for complete batch
+            batch_size = x.shape[0]
 
-            x = torch.zeros(batch_size, num_patches, size_flatten_patch, dtype=torch.float32)
+            patches_first_batch = create_patch_sequence_for_image(
+                x[0], self.modality_net_config_dict["PatchTokenization"]["patch_size"])
+            num_patches = patches_first_batch.shape[0]
+
+            patches_for_all_batches = torch.zeros(
+                batch_size, num_patches, patches_first_batch.shape[1], patches_first_batch.shape[2], patches_first_batch.shape[3])
+            patches_for_all_batches[0] = patches_first_batch
+
+            for i in range(1, batch_size):
+                patches_for_all_batches[i] = create_patch_sequence_for_image(
+                    x[i], self.modality_net_config_dict["PatchTokenization"]["patch_size"])
+
+            # flatten patches and project with linear layer to embedding dimension
+            size_flatten_patch = patches_for_all_batches[0].shape[1] * \
+                patches_for_all_batches[0].shape[2] * \
+                patches_for_all_batches[0].shape[3]
+
+            x = torch.zeros(batch_size, num_patches,
+                            size_flatten_patch, dtype=torch.float32)
 
             for i in range(batch_size):
                 x[i] = flatten_patches(patches_for_all_batches[i])
@@ -81,9 +96,15 @@ class ImagePatchTokenization_ModalityNet(ModalityNetBaseClass):
             x = self.linear(x)
 
         elif self.modality_net_config_dict["PatchTokenization"]["image_tokenization_strategy"] == "metaTransformer":
-            pass
+            # implementation based on https://github.com/invictus717/MetaTransformer/blob/master/Data2Seq/Image.py
+            # projection layer (Conv2D) will lead to projections in shape [batch_size, new_c, new_h, new_w]
+            # flatten leads to projections in shape [batch_size, new_c, new_h*new_w]
+            # transpose leads to projections in shape [batch_size, new_h*new_w, new_c]
+            # => Thus new_c determined by Conv2D layer is embedding dimension and number of tokens is determined by input image size and patch size (used as kernel size and stride)
+            x = self.proj_conv(x).flatten(2).transpose(1, 2)
 
         return x
+
 
 class TimeseriesTokenization_ModalityNet(ModalityNetBaseClass):
     """
@@ -109,9 +130,11 @@ class TimeseriesTokenization_ModalityNet(ModalityNetBaseClass):
         # #### define layers
         if modality_net_config_dict["PatchTokenization"]["timeseries_tokenization_strategy"] == "LeNetLike":
             # use LeNet1dLike_ModalityNet with additional linear layer to project representation to embedding dimension
-            self.le_net_like = LeNet1dLike_ModalityNet(sensor, modality_net_config_dict, sample_batch)
+            self.le_net_like = LeNet1dLike_ModalityNet(
+                sensor, modality_net_config_dict, sample_batch)
             patch_dim = self.le_net_like.get_shape_output_features()[1]
-            self.linear = nn.Linear(patch_dim, modality_net_config_dict["PatchTokenization"]["embed_dim"], bias=False)
+            self.linear = nn.Linear(
+                patch_dim, modality_net_config_dict["PatchTokenization"]["embed_dim"], bias=False)
 
         else:
             raise TypeError(
@@ -137,6 +160,7 @@ class TimeseriesTokenization_ModalityNet(ModalityNetBaseClass):
             x = self.linear(x)
 
         return x
+
 
 class LeNet2dLike_ModalityNet(ModalityNetBaseClass):
     """
