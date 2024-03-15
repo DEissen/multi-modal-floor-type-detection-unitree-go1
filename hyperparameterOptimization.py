@@ -45,8 +45,6 @@ def update_config_dict_with_wandb_config(train_config_dict):
         Returns:
             - train_config_dict (dict): Updated config for training, ...
     """
-    # overwrite test_dataset_path to validation set val_dataset_path (which must be used for hyperparameter optimization)
-    train_config_dict["test_dataset_path"] = train_config_dict["val_dataset_path"]
     # overwrite use_wandb config to prevent doubled logging
     train_config_dict["use_wandb"] = False
 

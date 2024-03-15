@@ -42,8 +42,11 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
         # hyperparameter optimization is running an run_path must be set to empty string again for dataset
         run_path = ""
         perform_wandb_sweep = True
+
     train_dataset_path = train_config_dict["train_dataset_path"]
+    val_dataset_path = train_config_dict["val_dataset_path"]
     test_dataset_path = train_config_dict["test_dataset_path"]
+
     if sensors == None:
         # use sensors from default config if no sensors were provided as function parameter
         sensors = train_config_dict["sensors"]
@@ -55,6 +58,8 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     # load datasets
     ds_train = FloorTypeDetectionDataset(
         train_dataset_path, sensors, run_path)
+    ds_val = FloorTypeDetectionDataset(
+        val_dataset_path, sensors, run_path)
     ds_test = FloorTypeDetectionDataset(
         test_dataset_path, sensors, run_path, create_faulty_data=True)  # only test dataset shall contain faulty data
 
@@ -65,7 +70,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
     # ####### start training if selected, otherwise load stored model #######
     if perform_training:
         # training loop
-        trainer = Trainer(model, ds_train, ds_test, sensors,
+        trainer = Trainer(model, ds_train, ds_val, sensors,
                           train_config_dict, run_paths_dict, perform_wandb_sweep)
         trainer.train()
     else:
