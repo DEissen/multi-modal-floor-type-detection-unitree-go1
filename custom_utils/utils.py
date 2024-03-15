@@ -109,6 +109,9 @@ class CustomLogger():
         # disable matplotlib font_manager logging as it's not needed
         logging.getLogger('matplotlib.font_manager').disabled = True
 
+        # prevent some useless logging to be plotted from urllib3 unless it's at least a warning
+        logging.getLogger("urllib3").setLevel(logging.WARNING)
+
     def start_logger(self, log_dir_path, stream_log=False):
         """
             Update logger to stream/ save logging to file and stream and potentially remove old Handlers (from previous runs).
@@ -117,11 +120,14 @@ class CustomLogger():
                 - log_dir_path (str): Path to dir where the log file shall be stored
                 - stream_log (bool): boolean flag for plotting to console or not
         """
-        # remove previous handlers if some are already present
+        # remove previous file handlers if some are already present
         if self.logger.hasHandlers():
             self.logger.removeHandler(self.file_handler)
-            if stream_log:
-                self.logger.removeHandler(self.stream_handler)
+
+        # plot to console if wanted and no handlers are present yet (first time logger is created)
+        if not self.logger.hasHandlers() and stream_log:
+            self.stream_handler = logging.StreamHandler()
+            self.logger.addHandler(self.stream_handler)
 
         # create log file
         log_file_path = os.path.join(log_dir_path, "run.log")
@@ -131,14 +137,6 @@ class CustomLogger():
         # add logging to file
         self.file_handler = logging.FileHandler(log_file_path)
         self.logger.addHandler(self.file_handler)
-
-        # plot to console if wanted
-        if stream_log:
-            self.stream_handler = logging.StreamHandler()
-            self.logger.addHandler(self.stream_handler)
-
-        # prevent some useless logging to be plotted from urllib3 unless it's at least a warning
-        logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 
 def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict, faulty_data_creation_config_dict):

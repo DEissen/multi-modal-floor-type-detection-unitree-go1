@@ -5,6 +5,8 @@ import datetime
 from custom_utils.utils import CustomLogger, gen_run_dir, get_run_name_for_logging, load_run_path_config
 from main import main
 
+# create logger as global variable to being able to have same object for all runs of sweep_wrapper()
+g_logger = CustomLogger()
 
 def sweep_wrapper():
     """
@@ -30,7 +32,7 @@ def sweep_wrapper():
     train_config_dict = update_config_dict_with_wandb_config(
         train_config_dict)
 
-    main(run_path=run_path, train_config_dict=train_config_dict)
+    main(run_path=run_path, train_config_dict=train_config_dict, logger=g_logger)
 
 
 def update_config_dict_with_wandb_config(train_config_dict):
