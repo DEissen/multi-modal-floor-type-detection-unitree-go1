@@ -136,6 +136,12 @@ class TimeseriesTokenization_ModalityNet(ModalityNetBaseClass):
             self.linear = nn.Linear(
                 patch_dim, modality_net_config_dict["PatchTokenization"]["embed_dim"], bias=False)
 
+        elif modality_net_config_dict["PatchTokenization"]["timeseries_tokenization_strategy"] == "metaTransformer":
+            # implementation based on https://github.com/invictus717/MetaTransformer/blob/master/Data2Seq/Image.py but with 1D Conv
+            kernel_size = modality_net_config_dict["PatchTokenization"]["kernel_size"]
+            in_c = sample_batch[sensor].shape[1]
+            self.proj_conv = nn.Conv1d(in_c, modality_net_config_dict["PatchTokenization"]["embed_dim"], kernel_size=kernel_size,
+                                       stride=kernel_size)
         else:
             raise TypeError(
                 f"Image tokenization strategy for TimeseriesPatchTokenization_ModalityNet Model is {modality_net_config_dict['PatchTokenization']['timeseries_tokenization_strategy']} which is not a valid value!")
@@ -158,6 +164,15 @@ class TimeseriesTokenization_ModalityNet(ModalityNetBaseClass):
             x = self.le_net_like(data_dict)
 
             x = self.linear(x)
+
+        elif self.modality_net_config_dict["PatchTokenization"]["timeseries_tokenization_strategy"] == "metaTransformer":
+            x = data_dict[self.sensor]
+
+            # implementation based on https://github.com/invictus717/MetaTransformer/blob/master/Data2Seq/Image.py but with 1D Conv
+            # projection layer (Conv1D) will lead to projections in shape [batch_size, new_c, new_w]
+            # transpose leads to projections in shape [batch_size, new_w, new_c]
+            # => Thus new_c determined by Conv1D layer is embedding dimension and number of tokens is determined by input window size and kernel size (used as kernel size and stride)
+            x = self.proj_conv(x).transpose(1, 2)
 
         return x
 
