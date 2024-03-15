@@ -6,7 +6,7 @@ from FTDDataset.FTDDataset import FloorTypeDetectionDataset
 from models.model_builder import model_builder
 from trainer import Trainer
 from evaluation import evaluate, load_state_dict
-from visualization.visualization import visualize_data_sample_or_batch, visualize_weights_of_dense_layer
+from visualization.visualization import visualize_data_sample_or_batch
 from custom_utils.utils import gen_run_dir, CustomLogger, store_used_config, load_run_path_config
 
 
@@ -87,9 +87,6 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
                 run_paths_dict["model_ckpts"], f"{model._get_name()}_{num_ckpt_to_load}.pt")
 
         load_state_dict(model, load_path)
-
-        # uncomment if you want to see a visualization of the weights of the first Dense Layer
-        # visualize_weights_of_dense_layer(model, sensors, False)
 
     # ####### start evaluation of trained/ loaded model #######
     # test loop
