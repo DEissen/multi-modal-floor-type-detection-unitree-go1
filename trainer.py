@@ -135,7 +135,7 @@ class Trainer():
             self.save_current_model(epoch_index+1, force_save)
 
             # ### check for early stopping
-            accuracy = self.train_confusion_matrix.get_accuracy()
+            accuracy = self.val_confusion_matrix.get_accuracy()
 
             # check for increased performance
             if self.best_accuracy < (accuracy - 0.05):
@@ -144,9 +144,9 @@ class Trainer():
             else:
                 self.early_stopping_counter += 1
 
-            if (self.early_stopping_counter == 2 and self.best_accuracy > 0.9) or self.early_stopping_counter == 3:
+            if (self.early_stopping_counter == 2 and self.best_accuracy > 0.9) or self.early_stopping_counter == 4:
                 logging.info(
-                    f"Accuracy did not increase by at least 5% during for {self.early_stopping_counter} epochs, thus training will be stopped now!")
+                    f"Validation accuracy did not increase by at least 5% during for {self.early_stopping_counter} epochs, thus training will be stopped now!")
                 logging.info('######### Finished training #########')
                 wandb.finish()
                 return
