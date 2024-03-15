@@ -109,7 +109,7 @@ class ImagePatchTokenization_ModalityNet(ModalityNetBaseClass):
 class TimeseriesTokenization_ModalityNet(ModalityNetBaseClass):
     """
         Modality net based for creating a sequence of 1D embedding vectors for transformers.
-        Using LeNet1dLike_ModalityNet() as feature extractor.
+        Using LeNet1dLike_ModalityNet() as feature extractor or patch tokenization similar to Meta Transformers (https://arxiv.org/pdf/2307.10802.pdf) image patch tokenization but with 1D Conv.
     """
 
     def __init__(self, sensor, modality_net_config_dict, sample_batch):
