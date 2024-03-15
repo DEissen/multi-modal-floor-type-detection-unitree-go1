@@ -8,7 +8,7 @@ import os
 
 # custom imports
 from metrics.confusion_matrix import ConfusionMatrix
-from custom_utils.utils import get_run_name_for_logging, get_git_revision_hash
+from custom_utils.utils import get_run_name_for_logging, get_git_revision_hash, get_number_of_parameters
 
 
 class Trainer():
@@ -102,8 +102,9 @@ class Trainer():
             if torch.cuda.is_available()
             else "cpu"
         )
+        num_params = get_number_of_parameters(self.model)
         logging.info(
-            f"Using {device} device to train the following model:\n{self.model}")
+            f"Using {device} device to train the following model with {num_params} parameters:\n{self.model}")
 
         # set model to training mode to be sure dropout and BN layers work as expected
         self.model.train()
