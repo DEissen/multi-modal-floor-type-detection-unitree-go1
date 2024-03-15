@@ -60,11 +60,11 @@ def evaluate(model, ds_test, sensors, config_dict):
 
     # log metrics to console
     logging_message = [f'\nResults for test set:',
-                       f'val acc: {test_accuracy*100:.2f} %',
-                       f'{averageing_info_string}val sensitivity: {test_sensitivity*100:.2f} %',
-                       f'{averageing_info_string}val specificity: {test_specificity*100:.2f} %',
-                       f'{averageing_info_string}val balanced acc: {test_balanced_accuracy*100:.2f} %',
-                       f'val confusion matrix:\n{test_confusion_matrix.get_result()}']
+                       f'test acc: {test_accuracy*100:.2f} %',
+                       f'{averageing_info_string}test sensitivity: {test_sensitivity*100:.2f} %',
+                       f'{averageing_info_string}test specificity: {test_specificity*100:.2f} %',
+                       f'{averageing_info_string}test balanced acc: {test_balanced_accuracy*100:.2f} %',
+                       f'test confusion matrix:\n{test_confusion_matrix.get_result()}']
     logging_message = "\n".join(logging_message)
     logging.info(logging_message)
 

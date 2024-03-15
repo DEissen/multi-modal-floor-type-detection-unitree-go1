@@ -18,7 +18,7 @@ class Trainer():
         Results and logs of the run will be stored in dir specified by run_paths_dict.
     """
 
-    def __init__(self, model, ds_train, ds_val, sensors, config_dict, run_paths_dict):
+    def __init__(self, model, ds_train, ds_val, sensors, config_dict, run_paths_dict, perform_wandb_sweep):
         """
             Init method of Trainer() class.
 
@@ -29,6 +29,7 @@ class Trainer():
                 - sensors (list): List containing all sensors which are present in the datasets
                 - config_dict (dict): Dict containing the configuration for the training
                 - run_paths_dict (dict): Dict containing all important paths for saving results and logs
+                - perform_wandb_sweep (bool): Boolean flag if data shall be written to Weights & Biases for hyperparameter sweep
         """
         # store parameters as members
         self.model = model
@@ -36,6 +37,7 @@ class Trainer():
         self.config_dict = config_dict
         self.log_interval = self.config_dict["train_log_interval"]
         self.run_paths_dict = run_paths_dict
+        self.perform_wandb_sweep = perform_wandb_sweep
 
         # member for early stopping detection
         self.best_accuracy = 0
@@ -238,7 +240,7 @@ class Trainer():
         logging.info(logging_message)
 
         # log to wandb if configured
-        if self.config_dict["use_wandb"]:
+        if self.config_dict["use_wandb"] or self.perform_wandb_sweep:
             wandb.log({'Train/loss': self.train_loss,
                        "Train/acc": train_accuracy,
                        "Train/sensitivity": train_sensitivity,
