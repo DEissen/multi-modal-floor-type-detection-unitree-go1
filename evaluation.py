@@ -88,6 +88,10 @@ def load_state_dict(model, load_path):
             - model (torch.nn): Model for which state dict shall be loaded
             - load_path (str): Path of the .pt file which contains the stored state dict
     """
+    logging.info(f"Trying to load state_dict for the model from '{load_path}'.\n\n"
+                 "!!! In case of errors check whether the correct git commit is used. The commit from training can be found in path '<run_path>/logs/git_hash.txt' !!!\n\n")
+
     model.load_state_dict(torch.load(load_path))
 
-    logging.info(f"Loaded state_dict for the model from '{load_path}'")
+    logging.info(
+        f"Successfully loaded state_dict for the model from '{load_path}'")
