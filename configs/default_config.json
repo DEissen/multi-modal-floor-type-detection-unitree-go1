@@ -19,18 +19,20 @@
          "type": "PatchTokenization",
 
          "PatchTokenization": {
+            "embed_dim": 32,
             "list of image_tokenization_strategy NOT USED BY PROGRAM": [
                "vit",
                "metaTransformer"
             ],
-            "image_tokenization_strategy": "vit",
-            "list of timeseries_tokenization_strategy NOT USED BY PROGRAM": [
-               "LeNetLike"
-            ],
-            "timeseries_tokenization_strategy": "LeNetLike",
+            "image_tokenization_strategy": "metaTransformer",
             "patch_size": 16,
-            "embed_dim": 32
 
+            "list of timeseries_tokenization_strategy NOT USED BY PROGRAM": [
+               "LeNetLike",
+               "metaTransformer"
+            ],
+            "timeseries_tokenization_strategy": "metaTransformer",
+            "kernel_size": 3
          }
       },
 
