@@ -13,7 +13,7 @@ from custom_utils.utils import gen_run_dir, CustomLogger, store_used_config, loa
 def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=None, logger=None, train_config_dict=None):
     """
         Main function for training and evaluation of unimodal and multimodal models for the FTD dataset.
-        Most important config parameters must be changed in the function itself, as this function is the core of the framework.
+        All important config parameters must be changed in the config file at ./configs/default_config.json => no need to change anything in this function!
         There are a few function parameters to enable execution of subsequent runs with the same config for different sensors, ...
 
         Parameters:
