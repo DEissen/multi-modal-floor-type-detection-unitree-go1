@@ -145,16 +145,18 @@ class CrossModalTransformer_FusionModel(FusionModelBaseClass):
 
                 x = multimodal_stream[key](
                     modality_net_outputs[target_sensor], modality_net_outputs[source_sensor], target_sensor, source_sensor)
+                
+                # flatten the result (important if whole sequence is used with different sequence lengths)
+                x = x.view(x.size(0), -1)
 
                 multimodal_stream_output.append(x)
 
             # append concatenated results (concatenated in embed_dim as suggested by MulT (https://arxiv.org/pdf/1906.00295.pdf)) to multimodal_stream_outputs
             multimodal_stream_outputs.append(
-                torch.cat(multimodal_stream_output, dim=2))
+                torch.cat(multimodal_stream_output, dim=1))
         
-        # concatenate results of all multi-modal streams and flatten the result (important if whole sequence is used)
-        output = torch.cat(multimodal_stream_outputs, dim=2)
-        output = output.view(output.size(0), -1)
+        # concatenate results of all multi-modal streams
+        output = torch.cat(multimodal_stream_outputs, dim=1)
 
         # # optionally use Batch Normalization on results as suggested by HighMMT (https://arxiv.org/pdf/2203.01311.pdf)
         # NOTE: Not supported yet, as BN must be initialized with number of parameters provided which is not easily possible!
