@@ -151,7 +151,7 @@ class CrossModalTransformer_FusionModel(FusionModelBaseClass):
 
                 multimodal_stream_output.append(x)
 
-            # append concatenated results (concatenated in embed_dim as suggested by MulT (https://arxiv.org/pdf/1906.00295.pdf)) to multimodal_stream_outputs
+            # append concatenated results from this multimodal stream to multimodal_stream_outputs
             multimodal_stream_outputs.append(
                 torch.cat(multimodal_stream_output, dim=1))
         
