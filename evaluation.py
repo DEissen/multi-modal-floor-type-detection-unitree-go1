@@ -22,6 +22,10 @@ def evaluate(model, ds_test, sensors, config_dict):
     """
     # set model to CPU as device (for visualization) and eval mode (for correct behavior of dropout and BN layers)
     model.to("cpu")
+    # for modality nets the device member must be overwritten as well
+    for sensor in sensors: 
+        model.fusion_model.modality_nets[sensor].device = "cpu"
+    
     model.eval()
     # initialize confusion matrix
     test_confusion_matrix = ConfusionMatrix(config_dict["num_classes"], device="cpu")
