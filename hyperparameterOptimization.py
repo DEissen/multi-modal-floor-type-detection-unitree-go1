@@ -57,6 +57,8 @@ def update_config_dict_with_wandb_config(train_config_dict):
     # update modality net config parameters
     train_config_dict["model"]["modality_net"]["PatchTokenization"][
         "image_tokenization_strategy"] = wandb.config.image_tokenization_strategy
+    train_config_dict["model"]["modality_net"]["PatchTokenization"][
+        "timeseries_tokenization_strategy"] = wandb.config.timeseries_tokenization_strategy
     train_config_dict["model"]["modality_net"]["PatchTokenization"]["patch_size"] = wandb.config.patch_size
 
     # update fusion model config parameters
@@ -96,11 +98,12 @@ if __name__ == "__main__":
             "lr": {"max": 0.005, "min": 0.0001},
             "embed_dim": {"values": [32, 64]},
             # modality net config parameters
-            "image_tokenization_strategy": {"values": ["vit"]},
+            "image_tokenization_strategy": {"values": ["vit", "metaTransformer"]},
+            "timeseries_tokenization_strategy": {"values": ["LeNetLike", "metaTransformer"]},
             "patch_size": {"values": [16, 32]},
             # fusion model config parameters
             "fusion_strategy": {"values": ["mult", "highMMT"]},
-            "num_cm_transformer_blocks": {"values": [2, 4, 8]},
+            "num_cm_transformer_blocks": {"values": [2, 3, 4, 5, 6]},
             "use_class_token": {"values": [True, False]},
             "act_fct_transformer": {"values": ["relu", "gelu"]},
             "pe_dropout": {"values": [0.0, 0.1, 0.2]},
@@ -121,4 +124,4 @@ if __name__ == "__main__":
     sweep_id = wandb.sweep(sweep=sweep_configuration, project="MA_sweeps")
 
     # Start sweep agent
-    wandb.agent(sweep_id, function=sweep_wrapper, count=12)
+    wandb.agent(sweep_id, function=sweep_wrapper, count=20)
