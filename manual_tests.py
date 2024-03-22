@@ -49,8 +49,18 @@ def test_random_multimodal_models(number_of_runs):
         sensors = sensors[:num_of_sensors]
         main(perform_training, sensors, run_path, num_ckpt_to_load, logger)
 
+def perform_test_multiple_times(number_of_runs):
+    perform_training = True
+    run_path = r""
+    num_ckpt_to_load = None
+    logger = CustomLogger()
+    sensors = ["HeadCamLeft", "footForce", "BellyCamLeft"]
+
+    for i in range(number_of_runs):
+        main(perform_training, sensors, run_path, num_ckpt_to_load, logger)
 
 if __name__ == "__main__":
     # ### uncomment function which you want to use
-    complete_unimodal_test()
+    # complete_unimodal_test()
     # test_random_multimodal_models(10)
+    perform_test_multiple_times(2)

@@ -55,9 +55,9 @@ class Trainer():
 
         # create data loader
         self.ds_train_loader = DataLoader(ds_train,
-                                          batch_size=config_dict["batch_size"], shuffle=True, drop_last=True)
+                                          batch_size=config_dict["batch_size"], shuffle=True, drop_last=True, num_workers=8)
         self.ds_val_loader = DataLoader(ds_val,
-                                        batch_size=config_dict["batch_size"], shuffle=True, drop_last=True)
+                                        batch_size=config_dict["batch_size"], shuffle=True, drop_last=True, num_workers=8)
         # calculate number of steps per epoch for logging
         self.steps_per_epoch = int(len(ds_train)/config_dict["batch_size"])
 
@@ -96,6 +96,8 @@ class Trainer():
             if torch.cuda.is_available()
             else "cpu"
         )
+        if self.device == "cuda":
+            torch.backends.cudnn.benchmark = True  # according to https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html this can improve training performance
         self.model.to(self.device)
         num_params = get_number_of_parameters(self.model)
         logging.info(
