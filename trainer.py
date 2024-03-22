@@ -74,12 +74,6 @@ class Trainer():
             raise Exception(
                 f"The optimizer '{self.config_dict['optimizer']}' is not supported!")
 
-        # initialize metrics
-        self.train_confusion_matrix = ConfusionMatrix(
-            self.config_dict["num_classes"])
-        self.val_confusion_matrix = ConfusionMatrix(
-            self.config_dict["num_classes"])
-
     def train(self):
         """
             Method to start the training of the model, including evaluation and logging during training.
@@ -97,14 +91,21 @@ class Trainer():
             f.write(git_hash)
 
         # check and log used device for training
-        device = (
+        self.device = (
             "cuda"
             if torch.cuda.is_available()
             else "cpu"
         )
+        self.model.to(self.device)
         num_params = get_number_of_parameters(self.model)
         logging.info(
-            f"Using {device} device to train the following model with {num_params} parameters:\n{self.model}")
+            f"Using {self.device} device to train the following model with {num_params} parameters:\n{self.model}")
+
+        # initialize metrics
+        self.train_confusion_matrix = ConfusionMatrix(
+            self.config_dict["num_classes"], self.device)
+        self.val_confusion_matrix = ConfusionMatrix(
+            self.config_dict["num_classes"], self.device)
 
         # set model to training mode to be sure dropout and BN layers work as expected
         self.model.train()
@@ -117,6 +118,12 @@ class Trainer():
 
             # iterate over all batches of the dataset once
             for step_index, (data_dict, labels) in enumerate(self.ds_train_loader, 0):
+                # put data and labels to self.device if it is cuda
+                if self.device == "cuda":
+                    labels = labels.to(self.device)
+                    for key in data_dict.keys():
+                        data_dict[key] = data_dict[key].to(self.device)
+
                 # update parameters for this batch
                 self.train_step(data_dict, labels)
 
@@ -269,6 +276,11 @@ class Trainer():
 
         with torch.no_grad():
             for (data_dict, labels) in self.ds_val_loader:
+                # put data and labels to self.device if it is cuda
+                if self.device == "cuda":
+                    labels = labels.to(self.device)
+                    for key in data_dict.keys():
+                        data_dict[key] = data_dict[key].to(self.device)
                 # get predicitons
                 outputs = self.model(data_dict)
 

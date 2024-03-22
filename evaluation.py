@@ -20,10 +20,11 @@ def evaluate(model, ds_test, sensors, config_dict):
             - sensors (list): List containing all sensors which are present in the datasets
             - config_dict (dict): Dict containing the configuration for the testing
     """
-    # set model to eval mode for correct behavior of dropout and BN layers
+    # set model to CPU as device (for visualization) and eval mode (for correct behavior of dropout and BN layers)
+    model.to("cpu")
     model.eval()
     # initialize confusion matrix
-    test_confusion_matrix = ConfusionMatrix(config_dict["num_classes"])
+    test_confusion_matrix = ConfusionMatrix(config_dict["num_classes"], device="cpu")
 
     # prepare test set
     ds_test_loader = DataLoader(
