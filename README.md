@@ -1,40 +1,60 @@
-# Multi-Modal_ML-Eissen (FA 3526)
-This is the repo for FA 3526 "Robustes und Adaptives Multi-Modal Machine Learning für die Bodentyperkennung eines mobilen Roboters". It contains the [Floor-Type-Detection-Dataset](https://github.tik.uni-stuttgart.de/ac136427/Floor-Type-Detection-Dataset) repository as a submodule for using the FTD Dataset. \
-Only the *main.py* program must be executed for training and evaluation of models where different use cases can be run by modifying the configuration of the program.
-TODO: Mention sweeps_and_test.py
+# Multi-Modal_ML-Eissen (FA 3526, MA 3606)
+This is the repo for the following works at the IAS Institute from University Stuttgart:
+    - FA 3526 "Robustes und Adaptives Multi-Modal Machine Learning für die Bodentyperkennung eines mobilen Roboters"
+    - MA 3606 "Multi-Modale Bodentyperkennung mithilfe von Transformer Netzwerken"
+    
+It contains the [Floor-Type-Detection-Dataset](https://github.tik.uni-stuttgart.de/ac136427/Floor-Type-Detection-Dataset) repository as a submodule for using the FTD Dataset. \
+The *main.py* program must be executed for training and evaluation of models where different use cases can be run by modifying the configuration in */configs/default_config.json*.
+Besides *main.py* only the programs of *hyperparameter_optimization.py* and *manual_tests.py* are intended to be directly executed (see details below). 
 
 # How to use the code to train uni- and multimodal models?
-This "How to" is further split in several subchapters. Each will describe how to act for different use cases. For each of these use cases the file *main.py* is the starting point, where you have to modify the function parameters of the main() function and the as "configurable" marked variables in the main() function accordingly.
+This "How to" is further split in several subchapters. Each will describe how to act for different use cases.
 ### Prerequisites
 1. Initialize submodule FTDDataset by using the following two commands:
     - git submodule init
     - git submodule update
-2. Prepare your version of the FTDDataset (either download an existing version or create your own from some measurements)
+2. Prepare the FTDDataset (either download an existing version or create a new one from some measurements)
 ### Common setup of the dataset
-- Modify variables for dataset config (path to dataset and names of config files), as well as the sensors you want to use in the *configs/default_config.json* file
-- Further config changes must be done in the selected config files of the FTDDataset submodule directly
+- Modify dataset config (path to train, val and test datasets), as well as the sensors which shall be used in the file *configs/default_config.json*
+- Further config changes (preprocessing, failure data creation and label mapping) can be done in the config files of the FTDDataset submodule directly. For details see the explanation in the README.md of the [Floor-Type-Detection-Dataset](https://github.tik.uni-stuttgart.de/ac136427/Floor-Type-Detection-Dataset) repo.
 ### Changing the model architecture
-TODO: Update section when model builder implementation is finished with Transformers
-- There are three different kinds of model architectures always usable in the main() function, which should be always present:
-    - A unimodal model for images (inside elif statement in line 108)
-    - A unimodal model for timeseries data (inside else statement in line 114)
-    - A multimodal model (inside if statement in line 94)
-- The existing model architectures can be found in the module **models/** where they can be modified
-- If you want to create a new model architecture you should do the following
-    1. Define your model in the module **models/** similar to the existing one (important to have same input handling in order to prevent an update of the training routine)
-    2. Import you model in *main.py* and replace the fitting model definition (unimodal or multimodal) with your model.
+- The model is created by the model_builder in *models/model_builder.py* which has always a feature fusion architecture consisting of three parts:
+    1. modality nets (for modality specific feature extraction)
+    2. fusion model (to combine the unimodal representations)
+    3. classification head (for the final classification)
+- The existing model architectures and parts can be found in the module **models/** where they can be modified and new parts can be added:
+    - *classification_heads.py*: Contains all classification heads based on MultiModalBaseClass() to create final model with
+    - *fusion_models.py*: Contains all fusion models based on FusionModelBaseClass() to create fusion model with
+    - *modality_nets.py*: Contains all modality nets based on ModalityNetBaseClass() to create modality nets with
+    - *model_base_classes.py*: Contains the base classes for each part of the architecture to take over some common parts (e.g. compatibility checks of input, ...) 
+    - *model_builder.py*: Contains the logic to build a model based on the configuration from *configs/default_config.json*
+    - *positional_encodings.py*: Contains all positional encodings for transformers
+    - *tokenEmbeddings.py*: Contains all token embeddings for transformers
+    - *transformers.py*: Contains all transformer layers and blocks
+- Creating a new model architecture:
+    - *Build model with existing parts:* Modify the "types" for each part of the model and it's parameters in the configuration *configs/default_config.json*
+    - *Build model with new parts:* Implement the new parts (e.g. a new modality net) in the correct file by using the templates at the end of the file (this already considers to inherit from the base classes and provides hints for implementation) and extend the model_builder() and the configuration in *configs/default_config.json* accordingly.
 
 ### Training of a single model
 For training a following parameters must be set:
-- perform_training of main() must be set to True
-- sensors list should be modified for your use case (should be done in *configs/default_config.json* and not as function parameter)
-- run_path of main() should be an empty string to prevent mixing up some logs
-- num_ckpt_to_load of main() is not relevant
-- logger of main() should be None
-- modify the configuration for your use case in *configs/default_config.json*
+- perform_training of main() must be set to True (default value!)
+- sensors list should be modified for to contain all sensors which the model shall use (should be done in *configs/default_config.json* and not as function parameter)
+- run_path of main() should be an empty string to prevent mixing up some logs (default value!)
+- num_ckpt_to_load of main() should be empty (default value!)
+- logger of main() should be None (default value!)
+- modify the configuration for the training in *configs/default_config.json* and not by providing a dict as the function parameter train_config_dict
 ### Training of multiple models
-- TODO
+- You can train multiple models by calling the main() function multiple times. Examples can be found in *manual_tests.py* where functions are present to:
+    - train a model architecture for all sensors as a unimodal net
+    - train a configurable amount of random multimodal models (same config for all models, but sensors are selected randomly)
+    - train a model with the same sensors and the same config multiple times
+### Perform hyperparameter optimization
+Hyperparameter optimization is supported using wandb (Weights&Biases) which contains some user specific configuration which might be needed to be updated.
+- For details about the sweep configuration, ... which is related to wandb, see the official [documentation](https://docs.wandb.ai/guides/sweeps).
+- For modification of the hyperparameters an update in the sweep_configuration (tells wandb which parameters shall be optimized and which values these can take) dict and inside function update_config_dict_with_wandb_config() (maps the chosen config from wandb to the loaded default config) is mandatory
+
 ### Evaluation of a model
+TODO: further update from here!
 For training a following parameters must be set:
 - perform_training of main() must be set to False
 - run_path of main() must be the path where the training was logged, e.g. r"D:\<path_to_repo>\runs\run_05_09__15_35_41"
