@@ -69,9 +69,9 @@ def update_config_dict_with_wandb_config(train_config_dict):
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["use_class_token"] = wandb.config.use_class_token
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["act_fct"] = wandb.config.act_fct_transformer
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["pe_dropout"] = wandb.config.pe_dropout
-    train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["cross_num_heads"] = wandb.config.cross_num_heads
+    train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["cross_num_heads"] = wandb.config.attention_num_heads
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["cross_attn_dropout"] = wandb.config.cross_attn_dropout
-    train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["latent_num_heads"] = wandb.config.latent_num_heads
+    train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["latent_num_heads"] = wandb.config.attention_num_heads
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["latent_attn_dropout"] = wandb.config.latent_attn_dropout
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["use_latent_self_attn"] = wandb.config.use_latent_self_attn
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["ffn_dropout"] = wandb.config.ffn_dropout
@@ -138,9 +138,8 @@ if __name__ == "__main__":
             "use_class_token": {"values": [True, False]},
             "act_fct_transformer": {"values": ["relu", "gelu"]},
             "pe_dropout": {"values": [0.0, 0.1, 0.2]},
-            "cross_num_heads": {"values": [1, 2, 4]},
+            "attention_num_heads": {"values": [1, 2, 4]},
             "cross_attn_dropout": {"values": [0.0, 0.1, 0.2]},
-            "latent_num_heads": {"values": [1, 2, 4]},
             "latent_attn_dropout": {"values": [0.0, 0.1, 0.2]},
             "use_latent_self_attn": {"values": [True, False]},
             "ffn_dropout": {"values": [0.1, 0.2, 0.3]},
