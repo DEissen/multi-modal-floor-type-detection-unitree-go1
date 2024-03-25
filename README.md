@@ -1,7 +1,7 @@
 # Multi-Modal_ML-Eissen (FA 3526, MA 3606)
 This is the repo for the following works at the IAS Institute from University Stuttgart:
-    - FA 3526 "Robustes und Adaptives Multi-Modal Machine Learning für die Bodentyperkennung eines mobilen Roboters"
-    - MA 3606 "Multi-Modale Bodentyperkennung mithilfe von Transformer Netzwerken"
+- FA 3526 "Robustes und Adaptives Multi-Modal Machine Learning für die Bodentyperkennung eines mobilen Roboters"
+- MA 3606 "Multi-Modale Bodentyperkennung mithilfe von Transformer Netzwerken"
     
 It contains the [Floor-Type-Detection-Dataset](https://github.tik.uni-stuttgart.de/ac136427/Floor-Type-Detection-Dataset) repository as a submodule for using the FTD Dataset. \
 The *main.py* program must be executed for training and evaluation of models where different use cases can be run by modifying the configuration in */configs/default_config.json*.
