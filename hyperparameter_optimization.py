@@ -1,6 +1,6 @@
-import logging
 import wandb
 import datetime
+import os
 
 from custom_utils.utils import CustomLogger, gen_run_dir, get_run_name_for_logging, load_run_path_config
 from main import main
@@ -53,6 +53,7 @@ def update_config_dict_with_wandb_config(train_config_dict):
     train_config_dict["lr"] = wandb.config.lr
     train_config_dict["model"]["modality_net"]["PatchTokenization"]["embed_dim"] = wandb.config.embed_dim
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["embed_dim"] = wandb.config.embed_dim
+    train_config_dict = update_ds_paths_in_config(train_config_dict)
 
     # update modality net config parameters
     train_config_dict["model"]["modality_net"]["PatchTokenization"][
@@ -60,6 +61,7 @@ def update_config_dict_with_wandb_config(train_config_dict):
     train_config_dict["model"]["modality_net"]["PatchTokenization"][
         "timeseries_tokenization_strategy"] = wandb.config.timeseries_tokenization_strategy
     train_config_dict["model"]["modality_net"]["PatchTokenization"]["patch_size"] = wandb.config.patch_size
+    train_config_dict["model"]["modality_net"]["PatchTokenization"]["kernel_size"] = wandb.config.kernel_size
 
     # update fusion model config parameters
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["fusion_strategy"] = wandb.config.fusion_strategy
@@ -67,16 +69,16 @@ def update_config_dict_with_wandb_config(train_config_dict):
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["use_class_token"] = wandb.config.use_class_token
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["act_fct"] = wandb.config.act_fct_transformer
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["pe_dropout"] = wandb.config.pe_dropout
-    train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["cross_num_heads"] = wandb.config.cross_num_heads
+    train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["cross_num_heads"] = wandb.config.attention_num_heads
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["cross_attn_dropout"] = wandb.config.cross_attn_dropout
-    train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["latent_num_heads"] = wandb.config.latent_num_heads
+    train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["latent_num_heads"] = wandb.config.attention_num_heads
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["latent_attn_dropout"] = wandb.config.latent_attn_dropout
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["use_latent_self_attn"] = wandb.config.use_latent_self_attn
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["ffn_dropout"] = wandb.config.ffn_dropout
 
     # update classification head config parameters
     train_config_dict["model"]["classification_head"]["dropout_rate"] = wandb.config.classification_ffn_dropout
-    train_config_dict["model"]["classification_head"]["dense"]["act_fct"] = wandb.config.classification_act_fct
+    # train_config_dict["model"]["classification_head"]["dense"]["act_fct"] = wandb.config.classification_act_fct
     train_config_dict["model"]["classification_head"]["dense"]["num_hidden_layers"] = wandb.config.num_hidden_layers_classification
     # update neurons_at_layer_index parameter according to number of layers
     neurons_at_layer_index_list = [128, 64]
@@ -84,6 +86,32 @@ def update_config_dict_with_wandb_config(train_config_dict):
 
     return train_config_dict
 
+def update_ds_paths_in_config(config_dict):
+    """
+        Function to update paths for all datasets in the train config based on the choosen hyperparameters from W&B
+
+        Parameters:
+            - config_dict (dict): Dict containing the train config to be updated
+
+        Returns:
+            - config_dict (dict): Dict containing the updated train config
+    """
+    dataset_base_path = r"/home/eissen/datasets"
+    dataset_base_name = "FTDD2.0"
+
+    name_extension = ""
+    if wandb.config.use_balanced_ds == True:
+        name_extension += "_balanced"
+    if wandb.config.window_size != 150:
+        name_extension += f"_{wandb.config.window_size}"
+
+    dataset_path = os.path.join(dataset_base_path, dataset_base_name + name_extension)
+
+    config_dict["train_dataset_path"] = os.path.join(dataset_path, "train")
+    config_dict["val_dataset_path"] = os.path.join(dataset_path, "val")
+    config_dict["test_dataset_path"] = os.path.join(dataset_path, "test")
+
+    return config_dict
 
 if __name__ == "__main__":
     # define sweep configuration
@@ -95,28 +123,30 @@ if __name__ == "__main__":
         {
             # general config parameters
             "batch_size": {"values": [8, 16, 32]},
-            "lr": {"max": 0.005, "min": 0.0001},
+            "lr": {"max": 0.002, "min": 0.0001},
             "embed_dim": {"values": [32, 64]},
+            "window_size": {"values": [50, 100, 150]},
+            "use_balanced_ds": {"values": [True, False]},
             # modality net config parameters
             "image_tokenization_strategy": {"values": ["vit", "metaTransformer"]},
             "timeseries_tokenization_strategy": {"values": ["LeNetLike", "metaTransformer"]},
             "patch_size": {"values": [16, 32]},
+            "kernel_size": {"values": [3, 6, 9]},
             # fusion model config parameters
             "fusion_strategy": {"values": ["mult", "highMMT"]},
             "num_cm_transformer_blocks": {"values": [2, 3, 4, 5, 6]},
             "use_class_token": {"values": [True, False]},
             "act_fct_transformer": {"values": ["relu", "gelu"]},
             "pe_dropout": {"values": [0.0, 0.1, 0.2]},
-            "cross_num_heads": {"values": [1, 2]},
+            "attention_num_heads": {"values": [1, 2, 4]},
             "cross_attn_dropout": {"values": [0.0, 0.1, 0.2]},
-            "latent_num_heads": {"values": [1, 2]},
             "latent_attn_dropout": {"values": [0.0, 0.1, 0.2]},
             "use_latent_self_attn": {"values": [True, False]},
-            "ffn_dropout": {"values": [0.1, 0.2, 0.3, 0.4]},
+            "ffn_dropout": {"values": [0.1, 0.2, 0.3]},
             # classification head config parameters
             "num_hidden_layers_classification": {"values": [0, 1, 2]},
             "classification_ffn_dropout": {"values": [0.1, 0.2, 0.3, 0.4]},
-            "classification_act_fct": {"values": ["relu", "gelu"]}
+            # "classification_act_fct": {"values": ["relu", "gelu"]}
         }
     }
 

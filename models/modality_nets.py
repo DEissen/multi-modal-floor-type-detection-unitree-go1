@@ -32,7 +32,7 @@ class ImagePatchTokenization_ModalityNet(ModalityNetBaseClass):
             # get shape of flatten patches for ViT strategy
             patch_size = modality_net_config_dict["PatchTokenization"]["patch_size"]
             patch_dim = flatten_patches(create_patch_sequence_for_image(
-                sample_batch[self.sensor][0], patch_size)).shape[1]
+                sample_batch[self.sensor][0], patch_size), self.device).shape[1]
 
             # linear layer (= without bias) for linear projection of patches to embedding dim according to ViT (https://arxiv.org/pdf/2010.11929.pdf)
             self.linear = nn.Linear(
@@ -75,7 +75,7 @@ class ImagePatchTokenization_ModalityNet(ModalityNetBaseClass):
             num_patches = patches_first_batch.shape[0]
 
             patches_for_all_batches = torch.zeros(
-                batch_size, num_patches, patches_first_batch.shape[1], patches_first_batch.shape[2], patches_first_batch.shape[3])
+                batch_size, num_patches, patches_first_batch.shape[1], patches_first_batch.shape[2], patches_first_batch.shape[3], device=self.device)
             patches_for_all_batches[0] = patches_first_batch
 
             for i in range(1, batch_size):
@@ -88,10 +88,10 @@ class ImagePatchTokenization_ModalityNet(ModalityNetBaseClass):
                 patches_for_all_batches[0].shape[3]
 
             x = torch.zeros(batch_size, num_patches,
-                            size_flatten_patch, dtype=torch.float32)
+                            size_flatten_patch, dtype=torch.float32, device=self.device)
 
             for i in range(batch_size):
-                x[i] = flatten_patches(patches_for_all_batches[i])
+                x[i] = flatten_patches(patches_for_all_batches[i], device=self.device)
 
             x = self.linear(x)
 
