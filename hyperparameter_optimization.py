@@ -1,6 +1,6 @@
-import logging
 import wandb
 import datetime
+import os
 
 from custom_utils.utils import CustomLogger, gen_run_dir, get_run_name_for_logging, load_run_path_config
 from main import main
@@ -53,6 +53,7 @@ def update_config_dict_with_wandb_config(train_config_dict):
     train_config_dict["lr"] = wandb.config.lr
     train_config_dict["model"]["modality_net"]["PatchTokenization"]["embed_dim"] = wandb.config.embed_dim
     train_config_dict["model"]["fusion_model"]["CrossModalTransformer"]["embed_dim"] = wandb.config.embed_dim
+    train_config_dict = update_ds_paths_in_config(train_config_dict)
 
     # update modality net config parameters
     train_config_dict["model"]["modality_net"]["PatchTokenization"][
@@ -85,6 +86,32 @@ def update_config_dict_with_wandb_config(train_config_dict):
 
     return train_config_dict
 
+def update_ds_paths_in_config(config_dict):
+    """
+        Function to update paths for all datasets in the train config based on the choosen hyperparameters from W&B
+
+        Parameters:
+            - config_dict (dict): Dict containing the train config to be updated
+
+        Returns:
+            - config_dict (dict): Dict containing the updated train config
+    """
+    dataset_base_path = r"/home/eissen/datasets"
+    dataset_base_name = "FTDD2.0"
+
+    name_extension = ""
+    if wandb.config.use_balanced_ds == True:
+        name_extension += "_balanced"
+    if wandb.config.window_size != 150:
+        name_extension += f"_{wandb.config.window_size}"
+
+    dataset_path = os.path.join(dataset_base_path, dataset_base_name + name_extension)
+
+    config_dict["train_dataset_path"] = os.path.join(dataset_path, "train")
+    config_dict["val_dataset_path"] = os.path.join(dataset_path, "val")
+    config_dict["test_dataset_path"] = os.path.join(dataset_path, "test")
+
+    return config_dict
 
 if __name__ == "__main__":
     # define sweep configuration
@@ -98,6 +125,8 @@ if __name__ == "__main__":
             "batch_size": {"values": [8, 16, 32]},
             "lr": {"max": 0.002, "min": 0.0001},
             "embed_dim": {"values": [32, 64]},
+            "window_size": {"values": [50, 100, 150]},
+            "use_balanced_ds": {"values": [True, False]},
             # modality net config parameters
             "image_tokenization_strategy": {"values": ["vit", "metaTransformer"]},
             "timeseries_tokenization_strategy": {"values": ["LeNetLike", "metaTransformer"]},
