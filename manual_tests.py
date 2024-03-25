@@ -4,9 +4,12 @@ from custom_utils.utils import CustomLogger
 from main import main
 
 
-def complete_unimodal_test():
+def complete_unimodal_test(num_runs_per_sensor = 1):
     """
         Train a uni-modal model for each sensor present in the FTD-Dataset with the default config.
+
+        Parameters:
+            - num_runs_per_sensor (int): Defines how often training for each unimodal model shall be performed
     """
     perform_training = True
     run_path = r""
@@ -19,7 +22,8 @@ def complete_unimodal_test():
 
     for sensor in sensors:
         sensor = [sensor]
-        main(perform_training, sensor, run_path, num_ckpt_to_load, logger)
+        for i in range(num_runs_per_sensor):
+            main(perform_training, sensor, run_path, num_ckpt_to_load, logger)
 
 
 def test_random_multimodal_models(number_of_runs):
@@ -61,6 +65,6 @@ def perform_test_multiple_times(number_of_runs):
 
 if __name__ == "__main__":
     # ### uncomment function which you want to use
-    # complete_unimodal_test()
+    complete_unimodal_test(3)
     # test_random_multimodal_models(10)
-    perform_test_multiple_times(2)
+    # perform_test_multiple_times(2)
