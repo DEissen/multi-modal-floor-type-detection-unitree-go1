@@ -45,6 +45,20 @@ class ImagePatchTokenization_ModalityNet(ModalityNetBaseClass):
             self.proj_conv = nn.Conv2d(
                 3, modality_net_config_dict["PatchTokenization"]["embed_dim"], kernel_size=patch_size, stride=patch_size)
 
+        elif modality_net_config_dict["PatchTokenization"]["image_tokenization_strategy"] == "LeNetLike":
+            # using LeNet2dLike_ModalityNet() class with additional Dense Layer to get embedding dimension
+            self.le_net_like = LeNet2dLike_ModalityNet(
+                sensor, modality_net_config_dict, sample_batch)
+
+            # representations after LeNet2dLike_ModalityNet will have shape [new_c, new_h, new_w]
+            # This will be flatten to a tensor of shape [new_c, new_h*new_w] which will be input for the dense layer
+            # => Input dimension for dense layer is new_h*new_w and is calculated below
+            input_dim = self.le_net_like.get_shape_output_features()[1] * \
+                self.le_net_like.get_shape_output_features()[2]
+
+            self.linear = nn.Linear(
+                input_dim, modality_net_config_dict["PatchTokenization"]["embed_dim"], bias=False)
+
         else:
             raise TypeError(
                 f"Image tokenization strategy for ImagePatchTokenization_ModalityNet Model is {modality_net_config_dict['PatchTokenization']['image_tokenization_strategy']} which is not a valid value!")
@@ -102,6 +116,12 @@ class ImagePatchTokenization_ModalityNet(ModalityNetBaseClass):
             # transpose leads to projections in shape [batch_size, new_h*new_w, new_c]
             # => Thus new_c determined by Conv2D layer is embedding dimension and number of tokens is determined by input image size and patch size (used as kernel size and stride)
             x = self.proj_conv(x).flatten(2).transpose(1, 2)
+
+        elif self.modality_net_config_dict["PatchTokenization"]["image_tokenization_strategy"] == "LeNetLike":
+            # flatten features from LeNetLike results in shape in shape [batch_size, new_c, new_h*new_w]
+            x = self.le_net_like(data_dict).flatten(2)
+            # linear layer maps to needed shape [batch_size, new_c, embed_dim]
+            x = self.linear(x)
 
         return x
 

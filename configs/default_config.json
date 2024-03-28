@@ -21,6 +21,7 @@
          "PatchTokenization": {
             "embed_dim": 32,
             "list of image_tokenization_strategy NOT USED BY PROGRAM": [
+               "LeNetLike",
                "vit",
                "metaTransformer"
             ],
