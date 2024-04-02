@@ -81,8 +81,10 @@ def update_config_dict_with_wandb_config(train_config_dict):
     # train_config_dict["model"]["classification_head"]["dense"]["act_fct"] = wandb.config.classification_act_fct
     train_config_dict["model"]["classification_head"]["dense"]["num_hidden_layers"] = wandb.config.num_hidden_layers_classification
     # update neurons_at_layer_index parameter according to number of layers
-    neurons_at_layer_index_list = [128, 64]
-    train_config_dict["model"]["classification_head"]["dense"]["neurons_at_layer_index"] = neurons_at_layer_index_list[-wandb.config.num_hidden_layers_classification:]
+    neurons_at_layer_index_list = []
+    for i in range(wandb.config.num_hidden_layers_classification):
+        neurons_at_layer_index_list.append(int(wandb.config.neurons_at_first_dense_layer / (2 ** i)))
+    train_config_dict["model"]["classification_head"]["dense"]["neurons_at_layer_index"] = neurons_at_layer_index_list
 
     return train_config_dict
 
@@ -122,31 +124,31 @@ if __name__ == "__main__":
         "parameters":
         {
             # general config parameters
-            "batch_size": {"values": [8, 16, 32]},
+            "batch_size": {"values": [8, 16, 32, 64]},
             "lr": {"max": 0.002, "min": 0.0001},
             "embed_dim": {"values": [32, 64]},
             "window_size": {"values": [50, 100, 150]},
             "use_balanced_ds": {"values": [True, False]},
             # modality net config parameters
-            "image_tokenization_strategy": {"values": ["vit", "metaTransformer"]},
+            "image_tokenization_strategy": {"values": ["LeNetLike", "vit", "metaTransformer"]},
             "timeseries_tokenization_strategy": {"values": ["LeNetLike", "metaTransformer"]},
             "patch_size": {"values": [16, 32]},
-            "kernel_size": {"values": [3, 6, 9]},
+            "kernel_size": {"values": [3, 6, 9, 12]},
             # fusion model config parameters
             "fusion_strategy": {"values": ["mult", "highMMT"]},
             "num_cm_transformer_blocks": {"values": [2, 3, 4, 5, 6]},
             "use_class_token": {"values": [True, False]},
             "act_fct_transformer": {"values": ["relu", "gelu"]},
-            "pe_dropout": {"values": [0.0, 0.1, 0.2]},
-            "attention_num_heads": {"values": [1, 2, 4]},
-            "cross_attn_dropout": {"values": [0.0, 0.1, 0.2]},
-            "latent_attn_dropout": {"values": [0.0, 0.1, 0.2]},
+            "pe_dropout": {"max": 0.4, "min": 0.0},
+            "attention_num_heads": {"values": [1, 2, 4, 8]},
+            "cross_attn_dropout": {"max": 0.4, "min": 0.0},
+            "latent_attn_dropout": {"max": 0.4, "min": 0.0},
             "use_latent_self_attn": {"values": [True, False]},
-            "ffn_dropout": {"values": [0.1, 0.2, 0.3]},
+            "ffn_dropout": {"max": 0.4, "min": 0.0},
             # classification head config parameters
             "num_hidden_layers_classification": {"values": [0, 1, 2]},
-            "classification_ffn_dropout": {"values": [0.1, 0.2, 0.3, 0.4]},
-            # "classification_act_fct": {"values": ["relu", "gelu"]}
+            "classification_ffn_dropout": {"max": 0.4, "min": 0.0},
+            "neurons_at_first_dense_layer": {"values": [128, 256, 512]}
         }
     }
 

@@ -54,8 +54,7 @@
             "embed_dim": 32,
             "use_class_token": true,
             "list of pe_type NOT USED BY PROGRAM": [
-               "fixed",
-               "TODO"
+               "fixed"
             ],
             "pe_type": "fixed",
             "list of act_fct NOT USED BY PROGRAM": [
