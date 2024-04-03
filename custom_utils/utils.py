@@ -215,7 +215,7 @@ def get_run_name_for_logging(sensors, model):
         if "Transformer" in str(type(model.fusion_model)):
             display_name += "_transformer"
         elif "Concatenate_" in str(type(model.fusion_model)):
-            display_name += "_baselineModel"
+            display_name += "_refModel"
         else:
             display_name += "_multimod"
 
