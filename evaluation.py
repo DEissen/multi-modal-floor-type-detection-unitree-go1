@@ -19,6 +19,9 @@ def evaluate(model, ds_test, sensors, config_dict):
             - ds_test (torch.utils.data.Dataset): Dataset to use for testing
             - sensors (list): List containing all sensors which are present in the datasets
             - config_dict (dict): Dict containing the configuration for the testing
+
+        Returns:
+            - test_accuracy (float): Test accuracy for trained/ evaluated model for manual logging
     """
     # set model to CPU as device (for visualization) and eval mode (for correct behavior of dropout and BN layers)
     model.to("cpu")
@@ -82,6 +85,7 @@ def evaluate(model, ds_test, sensors, config_dict):
         # logging.info("Show plot of confusion matrix:")
         # test_confusion_matrix.plot()
 
+    return float(test_accuracy)
 
 def load_state_dict(model, load_path):
     """

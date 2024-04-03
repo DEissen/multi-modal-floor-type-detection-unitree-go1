@@ -24,6 +24,9 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
             - num_ckpt_to_load (int): Number of the checkpoint to restore from run_path. If None is provided, the last element of the sorted file list will be taken.
             - logger (CustomLogger): Instance of custom logger class which must be provided in case main() is called multiple times by another function/program to prevent multiple logging
             - train_config_dict (dict): Config for training, ... which can be provided for hyperparameter optimization. If None is provided (default case), the config will be loaded based on the run_path.
+
+        Returns:
+            - test_acc (float): Test accuracy for trained/ evaluated model for manual logging
     """
     # ####### start of program (only modify code below if you want to change some behavior) #######
     run_paths_dict = gen_run_dir(run_path)
@@ -90,13 +93,14 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
 
     # ####### start evaluation of trained/ loaded model #######
     # test loop
-    evaluate(model, ds_test, sensors, train_config_dict)
+    test_acc = evaluate(model, ds_test, sensors, train_config_dict)
 
     # ####### store remaining logs #######
     # store used config as final step of logging
     store_used_config(run_paths_dict, ds_train.get_mapping_dict(),
                       ds_train.get_preprocessing_config(), train_config_dict, ds_test.get_faulty_data_creation_config())
 
+    return test_acc
 
 if __name__ == "__main__":
     main()

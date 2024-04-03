@@ -1,4 +1,5 @@
 from random import shuffle, randint
+import os
 
 from custom_utils.utils import CustomLogger
 from main import main
@@ -63,8 +64,47 @@ def perform_test_multiple_times(number_of_runs):
     for i in range(number_of_runs):
         main(perform_training, sensors, run_path, num_ckpt_to_load, logger)
 
+def evaluate_hyp_opt_runs(runs_base_path):
+    """
+        Function to evaluate multiple runs (e.g. from hyperparameter optimization) and log the values for each folder in a csv file which has the same name as the directory which runs_base_path refers to.
+
+        Parameters:
+            - runs_base_path (str): Path to directory which contains runs to evaluate
+
+    """
+    logger = CustomLogger()
+
+    res_dict = {}
+
+    for root, dirs, files in os.walk(runs_base_path):
+        for dir in dirs:
+            run_path =  os.path.join(root, dir)
+
+            print(f"\n\nStart evaluation for:{run_path}")
+            try:
+                test_acc = main(perform_training=False, run_path=run_path, logger=logger)
+            except:
+                print(f"Run {run_path} has no checkpoints (val_acc too bad), thus result is set to 0")
+                test_acc = 0
+
+            res_dict[dir] = float(test_acc)
+
+        break
+
+    best_run = max(res_dict, key=res_dict.get)
+    print(f"{best_run}: {res_dict[best_run]}")
+
+    sorted_res_dict = dict(sorted(res_dict.items(), key=lambda item: item[1]))
+
+    csv_filename = runs_base_path.split("/")[-1]
+
+    with open(f"./{csv_filename}.csv", "w") as file:
+        for _, key in enumerate(sorted_res_dict):
+            file.write(f"{key},{sorted_res_dict[key]}\n")
+
 if __name__ == "__main__":
     # ### uncomment function which you want to use
-    complete_unimodal_test(3)
+    # complete_unimodal_test(3)
     # test_random_multimodal_models(10)
     # perform_test_multiple_times(2)
+    evaluate_hyp_opt_runs(r"")
