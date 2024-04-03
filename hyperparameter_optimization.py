@@ -8,6 +8,7 @@ from main import main
 # create logger as global variable to being able to have same object for all runs of sweep_wrapper()
 g_logger = CustomLogger()
 
+
 def sweep_wrapper():
     """
         Wrapper for main() function to handle update of configuration parameters for hyperparameter optimization with wandb.
@@ -83,10 +84,12 @@ def update_config_dict_with_wandb_config(train_config_dict):
     # update neurons_at_layer_index parameter according to number of layers
     neurons_at_layer_index_list = []
     for i in range(wandb.config.num_hidden_layers_classification):
-        neurons_at_layer_index_list.append(int(wandb.config.neurons_at_first_dense_layer / (2 ** i)))
+        neurons_at_layer_index_list.append(
+            int(wandb.config.neurons_at_first_dense_layer / (2 ** i)))
     train_config_dict["model"]["classification_head"]["dense"]["neurons_at_layer_index"] = neurons_at_layer_index_list
 
     return train_config_dict
+
 
 def update_ds_paths_in_config(config_dict):
     """
@@ -107,13 +110,15 @@ def update_ds_paths_in_config(config_dict):
     if wandb.config.window_size != 150:
         name_extension += f"_{wandb.config.window_size}"
 
-    dataset_path = os.path.join(dataset_base_path, dataset_base_name + name_extension)
+    dataset_path = os.path.join(
+        dataset_base_path, dataset_base_name + name_extension)
 
     config_dict["train_dataset_path"] = os.path.join(dataset_path, "train")
     config_dict["val_dataset_path"] = os.path.join(dataset_path, "val")
     config_dict["test_dataset_path"] = os.path.join(dataset_path, "test")
 
     return config_dict
+
 
 if __name__ == "__main__":
     # define sweep configuration

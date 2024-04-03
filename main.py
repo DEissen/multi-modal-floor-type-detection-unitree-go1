@@ -35,7 +35,7 @@ def main(perform_training=True, sensors=None, run_path=r"", num_ckpt_to_load=Non
         logger = CustomLogger()
 
     logger.start_logger(run_paths_dict["logs_path"], stream_log=True)
-    
+
     # ####### load and process config #######
     # load config based on run_path if no train_config_dict was provided
     if train_config_dict == None:
