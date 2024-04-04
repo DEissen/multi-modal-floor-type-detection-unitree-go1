@@ -19,16 +19,20 @@ def evaluate(model, ds_test, sensors, config_dict):
             - ds_test (torch.utils.data.Dataset): Dataset to use for testing
             - sensors (list): List containing all sensors which are present in the datasets
             - config_dict (dict): Dict containing the configuration for the testing
+
+        Returns:
+            - test_accuracy (float): Test accuracy for trained/ evaluated model for manual logging
     """
     # set model to CPU as device (for visualization) and eval mode (for correct behavior of dropout and BN layers)
     model.to("cpu")
     # for modality nets the device member must be overwritten as well
-    for sensor in sensors: 
+    for sensor in sensors:
         model.fusion_model.modality_nets[sensor].device = "cpu"
-    
+
     model.eval()
     # initialize confusion matrix
-    test_confusion_matrix = ConfusionMatrix(config_dict["num_classes"], device="cpu")
+    test_confusion_matrix = ConfusionMatrix(
+        config_dict["num_classes"], device="cpu")
 
     # prepare test set
     ds_test_loader = DataLoader(
@@ -82,6 +86,7 @@ def evaluate(model, ds_test, sensors, config_dict):
         # logging.info("Show plot of confusion matrix:")
         # test_confusion_matrix.plot()
 
+    return float(test_accuracy)
 
 def load_state_dict(model, load_path):
     """

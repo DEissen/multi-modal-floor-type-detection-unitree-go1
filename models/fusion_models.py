@@ -74,14 +74,17 @@ class CrossModalTransformer_FusionModel(FusionModelBaseClass):
 
         # #### check whether at least two sensors are provided
         if len(sensors) < 2:
-            raise TypeError(f"CrossModalTransformer_FusionModel can only be used in multi-modal context (at least two sensors must be provided)!") 
+            raise TypeError(
+                f"CrossModalTransformer_FusionModel can only be used in multi-modal context (at least two sensors must be provided)!")
 
         # #### check whether modality_nets are compatible
         for sensor in sensors:
-            modality_net_embed_dim = modality_nets[sensor].get_shape_output_features()[1]
-            
+            modality_net_embed_dim = modality_nets[sensor].get_shape_output_features()[
+                1]
+
             if fusion_model_config_dict['CrossModalTransformer']['embed_dim'] != modality_net_embed_dim:
-                raise TypeError(f"Embedding dimension does not fit for modality net of {sensor}!") 
+                raise TypeError(
+                    f"Embedding dimension does not fit for modality net of {sensor}!")
 
         # #### get combinations for cross-modal Transformers based on configured method
         if fusion_model_config_dict["CrossModalTransformer"]["fusion_strategy"] == "highMMT":
@@ -145,7 +148,7 @@ class CrossModalTransformer_FusionModel(FusionModelBaseClass):
 
                 x = multimodal_stream[key](
                     modality_net_outputs[target_sensor], modality_net_outputs[source_sensor], target_sensor, source_sensor)
-                
+
                 # flatten the result (important if whole sequence is used with different sequence lengths)
                 x = x.view(x.size(0), -1)
 
@@ -154,7 +157,7 @@ class CrossModalTransformer_FusionModel(FusionModelBaseClass):
             # append concatenated results from this multimodal stream to multimodal_stream_outputs
             multimodal_stream_outputs.append(
                 torch.cat(multimodal_stream_output, dim=1))
-        
+
         # concatenate results of all multi-modal streams
         output = torch.cat(multimodal_stream_outputs, dim=1)
 

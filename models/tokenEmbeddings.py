@@ -42,7 +42,8 @@ def flatten_patches(img_patches, device):
     size_flatten_patch = img_patches.shape[1] * \
         img_patches.shape[2] * img_patches.shape[3]
 
-    res = torch.zeros(num_patches, size_flatten_patch, dtype=torch.float32, device=device)
+    res = torch.zeros(num_patches, size_flatten_patch,
+                      dtype=torch.float32, device=device)
     for num_patch in range(num_patches):
         res[num_patch] = img_patches[num_patch].flatten()
 

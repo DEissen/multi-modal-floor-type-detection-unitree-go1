@@ -20,14 +20,15 @@ class Dense_ClassificationHead(MultiModalBaseClass):
                 - classification_head_config_dict (dict): Dict containing the classification head specific configuration parameters
                 - fusion_model (FusionModelBaseClass): Fusion model instance to be used which must be a subclass of FusionModelBaseClass
         """
-        # #### call init method of superclass 
+        # #### call init method of superclass
         super().__init__(num_classes, sensors, classification_head_config_dict, fusion_model)
         self.num_hidden_layers = classification_head_config_dict["dense"]["num_hidden_layers"]
 
         # #### Check whether fusion model is compatible with this classification head
         fusion_model_output_shape = self.fusion_model.get_shape_output_features()
         if len(fusion_model_output_shape) > 1:
-            raise TypeError("Fusion Model is not compatible, as the Dense_ClassificationHead only accepts a flatten input!")
+            raise TypeError(
+                "Fusion Model is not compatible, as the Dense_ClassificationHead only accepts a flatten input!")
 
         # #### define layers
         self.hidden_layers = nn.ModuleList()
@@ -41,9 +42,11 @@ class Dense_ClassificationHead(MultiModalBaseClass):
 
             # get number of neurons for the layer from config and add it to ModuleDict
             try:
-                neurons_in_layer = classification_head_config_dict["dense"]["neurons_at_layer_index"][layer_index]
+                neurons_in_layer = classification_head_config_dict[
+                    "dense"]["neurons_at_layer_index"][layer_index]
             except IndexError:
-                raise TypeError('Configuration for Dense_ClassificationHead does not contain enough entries for the parameter "neurons_at_layer_index"!')
+                raise TypeError(
+                    'Configuration for Dense_ClassificationHead does not contain enough entries for the parameter "neurons_at_layer_index"!')
             hidden_layer["fc"] = nn.Linear(num_input_neurons, neurons_in_layer)
 
             # add activation function based on config to ModuleDict
@@ -57,7 +60,8 @@ class Dense_ClassificationHead(MultiModalBaseClass):
 
             # add dropout to hidden_layer ModuleDict if configured
             if layer_index in classification_head_config_dict["dense"]["dropout_at_layer_index"]:
-                hidden_layer["dropout"] = nn.Dropout1d(classification_head_config_dict["dropout_rate"])
+                hidden_layer["dropout"] = nn.Dropout1d(
+                    classification_head_config_dict["dropout_rate"])
 
             # store number of neurons of this layer as number input neurons for next layer
             num_input_neurons = neurons_in_layer
@@ -79,7 +83,7 @@ class Dense_ClassificationHead(MultiModalBaseClass):
         """
         # #### get representations from fusion model
         x = self.fusion_model(data_dict)
-        
+
         # #### forward path of classification head
         # hidden layers
         for layer_index in range(self.num_hidden_layers):
@@ -110,7 +114,7 @@ class Dense_ClassificationHead(MultiModalBaseClass):
 #                 - classification_head_config_dict (dict): Dict containing the classification head specific configuration parameters
 #                 - fusion_model (FusionModelBaseClass): Fusion model instance to be used which must be a subclass of FusionModelBaseClass
 #         """
-#         # #### call init method of superclass 
+#         # #### call init method of superclass
 #         super().__init__(num_classes, sensors, classification_head_config_dict, fusion_model)
 
 #         # #### Check whether fusion model is compatible with this classification head
@@ -132,7 +136,7 @@ class Dense_ClassificationHead(MultiModalBaseClass):
 #         """
 #         # #### get representations from fusion model
 #         x = self.fusion_model(data_dict)
-        
+
 #         # #### forward path of classification head
 #         # TODO: replace with real forward path of classification head based on x
 

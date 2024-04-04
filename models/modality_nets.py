@@ -105,7 +105,8 @@ class ImagePatchTokenization_ModalityNet(ModalityNetBaseClass):
                             size_flatten_patch, dtype=torch.float32, device=self.device)
 
             for i in range(batch_size):
-                x[i] = flatten_patches(patches_for_all_batches[i], device=self.device)
+                x[i] = flatten_patches(
+                    patches_for_all_batches[i], device=self.device)
 
             x = self.linear(x)
 
