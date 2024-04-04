@@ -58,13 +58,13 @@ def perform_test_multiple_times(number_of_runs):
     run_path = r""
     num_ckpt_to_load = None
     logger = CustomLogger()
-    sensors = ["HeadCamLeft", "footForce", "BellyCamLeft"]
+    sensors = None
 
     for i in range(number_of_runs):
         main(perform_training, sensors, run_path, num_ckpt_to_load, logger)
 
 if __name__ == "__main__":
     # ### uncomment function which you want to use
-    complete_unimodal_test(3)
+    # complete_unimodal_test(3)
     # test_random_multimodal_models(10)
-    # perform_test_multiple_times(2)
+    perform_test_multiple_times(3)
