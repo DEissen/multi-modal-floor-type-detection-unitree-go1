@@ -80,11 +80,11 @@ def evaluate(model, ds_test, sensors, config_dict):
     logging.info('######### Finished evaluation #########')
 
     if config_dict["visualize_results"]:
+        logging.info("Show plot of confusion matrix:")
+        test_confusion_matrix.plot()
+
         logging.info("Show example prediction for first image of last batch:")
         visualize_data_sample_or_batch(data_dict, labels, predicted)
-        # plot does somehow not work yet!
-        # logging.info("Show plot of confusion matrix:")
-        # test_confusion_matrix.plot()
 
     return float(test_accuracy)
 
