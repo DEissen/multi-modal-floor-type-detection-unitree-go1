@@ -101,7 +101,7 @@ def update_ds_paths_in_config(config_dict):
         Returns:
             - config_dict (dict): Dict containing the updated train config
     """
-    dataset_base_path = r"/home/eissen/datasets"
+    dataset_base_path = r"/home/simon/Go1"
     dataset_base_name = "FTDD2.0"
 
     name_extension = ""

@@ -56,6 +56,12 @@ def test_random_multimodal_models(number_of_runs):
 
 
 def perform_test_multiple_times(number_of_runs):
+    """
+        Function to run a training with the same configuration multiple times in a row.
+
+        Parameters:
+            - number_of_runs (int): Number of trainings to run
+    """
     perform_training = True
     run_path = r""
     num_ckpt_to_load = None

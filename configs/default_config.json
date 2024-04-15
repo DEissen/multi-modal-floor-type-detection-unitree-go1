@@ -77,8 +77,7 @@
 
       "classification_head": {
          "list of supported types NOT USED BY PROGRAM": [
-            "dense",
-            "TODO"
+            "dense"
          ],
          "type": "dense",
          "dropout_rate": 0.2,
@@ -121,7 +120,7 @@
       "BellyCamLeft"
    ],
 
-   "train_dataset_path": "D:\\MA_Daten\\FTDD1.8\\train",
-   "val_dataset_path": "D:\\MA_Daten\\FTDD1.8\\val",
-   "test_dataset_path": "D:\\MA_Daten\\FTDD1.8\\test"
+   "train_dataset_path": "/home/simon/Go1/FTDD2.0/train",
+   "val_dataset_path": "/home/simon/Go1/FTDD2.0/val",
+   "test_dataset_path": "/home/simon/Go1/FTDD2.0/test"
 }
