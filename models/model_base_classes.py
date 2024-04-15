@@ -15,6 +15,12 @@ class ModelBaseClass(nn.Module):
         # __init__() method of superclass (nn.Module) must be called to be able to define layers.
         super().__init__()
 
+        self.device = (
+            "cuda"
+            if torch.cuda.is_available()
+            else "cpu"
+        )
+
     def calculate_features_from_sample_batch(self, sample_batch):
         """
             Method to calculate and store the number of flatten output features the shape of the output in members.
@@ -62,6 +68,11 @@ class ModelBaseClass(nn.Module):
             Returns:
                 - (int): Number of flatten output of the model
         """
+        if self.device == "cuda":
+            for key in sample_batch.keys():
+                sample_batch[key] = sample_batch[key].to(self.device)
+
+        self.to(self.device)
         x = self.forward(sample_batch)
         return int(self.num_flat_features(x))
 

@@ -8,7 +8,7 @@ import os
 
 # custom imports
 from metrics.confusion_matrix import ConfusionMatrix
-from custom_utils.utils import get_run_name_for_logging, get_git_revision_hash
+from custom_utils.utils import get_run_name_for_logging, get_git_revision_hash, get_number_of_parameters
 
 
 class Trainer():
@@ -55,9 +55,9 @@ class Trainer():
 
         # create data loader
         self.ds_train_loader = DataLoader(ds_train,
-                                          batch_size=config_dict["batch_size"], shuffle=True, drop_last=True)
+                                          batch_size=config_dict["batch_size"], shuffle=True, drop_last=True, num_workers=8)
         self.ds_val_loader = DataLoader(ds_val,
-                                        batch_size=config_dict["batch_size"], shuffle=True, drop_last=True)
+                                        batch_size=config_dict["batch_size"], shuffle=True, drop_last=True, num_workers=8)
         # calculate number of steps per epoch for logging
         self.steps_per_epoch = int(len(ds_train)/config_dict["batch_size"])
 
@@ -73,12 +73,6 @@ class Trainer():
         else:
             raise Exception(
                 f"The optimizer '{self.config_dict['optimizer']}' is not supported!")
-
-        # initialize metrics
-        self.train_confusion_matrix = ConfusionMatrix(
-            self.config_dict["num_classes"])
-        self.val_confusion_matrix = ConfusionMatrix(
-            self.config_dict["num_classes"])
 
     def train(self):
         """
@@ -97,13 +91,23 @@ class Trainer():
             f.write(git_hash)
 
         # check and log used device for training
-        device = (
+        self.device = (
             "cuda"
             if torch.cuda.is_available()
             else "cpu"
         )
+        if self.device == "cuda":
+            torch.backends.cudnn.benchmark = True  # according to https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html this can improve training performance
+        self.model.to(self.device)
+        num_params = get_number_of_parameters(self.model)
         logging.info(
-            f"Using {device} device to train the following model:\n{self.model}")
+            f"Using {self.device} device to train the following model with {num_params} parameters:\n{self.model}")
+
+        # initialize metrics
+        self.train_confusion_matrix = ConfusionMatrix(
+            self.config_dict["num_classes"], self.device)
+        self.val_confusion_matrix = ConfusionMatrix(
+            self.config_dict["num_classes"], self.device)
 
         # set model to training mode to be sure dropout and BN layers work as expected
         self.model.train()
@@ -116,6 +120,12 @@ class Trainer():
 
             # iterate over all batches of the dataset once
             for step_index, (data_dict, labels) in enumerate(self.ds_train_loader, 0):
+                # put data and labels to self.device if it is cuda
+                if self.device == "cuda":
+                    labels = labels.to(self.device)
+                    for key in data_dict.keys():
+                        data_dict[key] = data_dict[key].to(self.device)
+
                 # update parameters for this batch
                 self.train_step(data_dict, labels)
 
@@ -135,7 +145,7 @@ class Trainer():
             self.save_current_model(epoch_index+1, force_save)
 
             # ### check for early stopping
-            accuracy = self.train_confusion_matrix.get_accuracy()
+            accuracy = self.val_confusion_matrix.get_accuracy()
 
             # check for increased performance
             if self.best_accuracy < (accuracy - 0.05):
@@ -144,9 +154,9 @@ class Trainer():
             else:
                 self.early_stopping_counter += 1
 
-            if (self.early_stopping_counter == 3 and self.best_accuracy > 0.9) or self.early_stopping_counter == 5:
+            if (self.early_stopping_counter == 2 and self.best_accuracy > 0.9) or self.early_stopping_counter == 4:
                 logging.info(
-                    f"Accuracy did not increase by at least 5% during for {self.early_stopping_counter} epochs, thus training will be stopped now!")
+                    f"Validation accuracy did not increase by at least 5% during for {self.early_stopping_counter} epochs, thus training will be stopped now!")
                 logging.info('######### Finished training #########')
                 wandb.finish()
                 return
@@ -268,6 +278,11 @@ class Trainer():
 
         with torch.no_grad():
             for (data_dict, labels) in self.ds_val_loader:
+                # put data and labels to self.device if it is cuda
+                if self.device == "cuda":
+                    labels = labels.to(self.device)
+                    for key in data_dict.keys():
+                        data_dict[key] = data_dict[key].to(self.device)
                 # get predicitons
                 outputs = self.model(data_dict)
 

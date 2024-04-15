@@ -19,18 +19,21 @@
          "type": "PatchTokenization",
 
          "PatchTokenization": {
+            "embed_dim": 32,
             "list of image_tokenization_strategy NOT USED BY PROGRAM": [
+               "LeNetLike",
                "vit",
                "metaTransformer"
             ],
-            "image_tokenization_strategy": "vit",
-            "list of timeseries_tokenization_strategy NOT USED BY PROGRAM": [
-               "LeNetLike"
-            ],
-            "timeseries_tokenization_strategy": "LeNetLike",
+            "image_tokenization_strategy": "metaTransformer",
             "patch_size": 16,
-            "embed_dim": 32
 
+            "list of timeseries_tokenization_strategy NOT USED BY PROGRAM": [
+               "LeNetLike",
+               "metaTransformer"
+            ],
+            "timeseries_tokenization_strategy": "metaTransformer",
+            "kernel_size": 3
          }
       },
 
@@ -51,8 +54,7 @@
             "embed_dim": 32,
             "use_class_token": true,
             "list of pe_type NOT USED BY PROGRAM": [
-               "fixed",
-               "TODO"
+               "fixed"
             ],
             "pe_type": "fixed",
             "list of act_fct NOT USED BY PROGRAM": [
@@ -75,8 +77,7 @@
 
       "classification_head": {
          "list of supported types NOT USED BY PROGRAM": [
-            "dense",
-            "TODO"
+            "dense"
          ],
          "type": "dense",
          "dropout_rate": 0.2,
@@ -119,7 +120,7 @@
       "BellyCamLeft"
    ],
 
-   "train_dataset_path": "D:\\MA_Daten\\FTDD1.8\\train",
-   "val_dataset_path": "D:\\MA_Daten\\FTDD1.8\\val",
-   "test_dataset_path": "D:\\MA_Daten\\FTDD1.8\\test"
+   "train_dataset_path": "/home/simon/Go1/FTDD2.0/train",
+   "val_dataset_path": "/home/simon/Go1/FTDD2.0/val",
+   "test_dataset_path": "/home/simon/Go1/FTDD2.0/test"
 }

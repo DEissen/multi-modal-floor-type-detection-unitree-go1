@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from math import sqrt
 
+
 def visualize_img_as_path_seq(patch_seq):
     """
         Visualize the Patch sequence of a single image (not a whole batch!) expected in shape [seq_len, c, h, w]
@@ -18,6 +19,7 @@ def visualize_img_as_path_seq(patch_seq):
 
         ax = fig.add_subplot(axis_size, axis_size, i+1, xticks=[], yticks=[])
         plt.imshow(patch_as_img)
+
 
 def visualize_data_sample_or_batch(data_dict, label=None, prediction=None):
     """

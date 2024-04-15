@@ -16,7 +16,7 @@ class ConfusionMatrix():
 
     """
 
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, device):
         """
             Init method of ConfusionMatrix() class.
 
@@ -24,13 +24,16 @@ class ConfusionMatrix():
                 - num_classes (int): Number of classes present in the classification problem
         """
         self.num_classes = num_classes
-        self.confmatrix = MulticlassConfusionMatrix(self.num_classes)
+        self.device = device
+        self.confmatrix = MulticlassConfusionMatrix(
+            self.num_classes).to(self.device)
 
     def reset(self):
         """
             Method to reset the confusion matrix.
         """
-        self.confmatrix = MulticlassConfusionMatrix(self.num_classes)
+        self.confmatrix = MulticlassConfusionMatrix(
+            self.num_classes).to(self.device)
 
     def update(self, pred, labels):
         """
@@ -49,7 +52,12 @@ class ConfusionMatrix():
             Returns:
                 - (np.array): Numpy array of the current state of the confusion matrix
         """
-        return self.confmatrix.compute().numpy()
+        if self.device == "cuda":
+            res = self.confmatrix.compute().cpu().numpy()
+        else:
+            res = self.confmatrix.compute().numpy()
+
+        return res
 
     def get_tp_tn_fn_fp_total(self):
         """

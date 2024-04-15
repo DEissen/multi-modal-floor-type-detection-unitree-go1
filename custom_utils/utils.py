@@ -215,7 +215,7 @@ def get_run_name_for_logging(sensors, model):
         if "Transformer" in str(type(model.fusion_model)):
             display_name += "_transformer"
         elif "Concatenate_" in str(type(model.fusion_model)):
-            display_name += "_baselineModel"
+            display_name += "_refModel"
         else:
             display_name += "_multimod"
 
@@ -235,3 +235,18 @@ def get_git_revision_hash() -> str:
             (str): Full hash of checked out commit of the repo
     """
     return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
+
+
+def get_number_of_parameters(model):
+    """
+        Function to get number of total parameters for PyTorch model.
+        Implementation taken from: https://stackoverflow.com/questions/49201236/check-the-total-number-of-parameters-in-a-pytorch-model
+
+        Parameters:
+            - model (torch.nn): Model which shall be trained
+
+        Returns:
+            - pytorch_total_params (int): Number of parameters for the model
+    """
+    pytorch_total_params = sum(p.numel() for p in model.parameters())
+    return pytorch_total_params
