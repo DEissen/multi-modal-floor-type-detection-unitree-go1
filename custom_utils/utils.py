@@ -3,6 +3,8 @@ import datetime
 import logging
 import json
 import os.path as path
+import datetime
+import subprocess
 
 
 def gen_run_dir(present_run_path=""):
@@ -59,6 +61,35 @@ def gen_run_dir(present_run_path=""):
     return run_paths_dict
 
 
+def load_run_path_config(run_path):
+    """
+        Helper function to load config from run_path or default config íf run_path == ""
+
+        Parameters:
+            - run_path (str): Path to the run folder from previous run.
+                              If run_path == "" a new run is executed and default config will be loaded.
+
+        Returns:
+            - config (dict): Dict containing the data from the config file
+    """
+    # create path to JSON config file (either default config or from run_path)
+    if run_path == "":
+        file_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = path.join(file_dir, os.pardir,
+                                "configs", "default_config.json")
+    else:
+        config_path = os.path.join(run_path, "config", "train_config.json")
+
+    # load config from config path
+    with open(config_path, "r") as f:
+        config = json.load(f)
+
+    # remove "comments" from default config if present
+    config.pop("list of all supported sensors NOT USED BY PROGRAM", None)
+
+    return config
+
+
 class CustomLogger():
     """
         CustomLogger class necessary to handle logging.Handler objects in case of multiple runs (to stop logging to previous runs).
@@ -78,6 +109,9 @@ class CustomLogger():
         # disable matplotlib font_manager logging as it's not needed
         logging.getLogger('matplotlib.font_manager').disabled = True
 
+        # prevent some useless logging to be plotted from urllib3 unless it's at least a warning
+        logging.getLogger("urllib3").setLevel(logging.WARNING)
+
     def start_logger(self, log_dir_path, stream_log=False):
         """
             Update logger to stream/ save logging to file and stream and potentially remove old Handlers (from previous runs).
@@ -86,11 +120,14 @@ class CustomLogger():
                 - log_dir_path (str): Path to dir where the log file shall be stored
                 - stream_log (bool): boolean flag for plotting to console or not
         """
-        # remove previous handlers if some are already present
+        # remove previous file handlers if some are already present
         if self.logger.hasHandlers():
             self.logger.removeHandler(self.file_handler)
-            if stream_log:
-                self.logger.removeHandler(self.stream_handler)
+
+        # plot to console if wanted and no handlers are present yet (first time logger is created)
+        if not self.logger.hasHandlers() and stream_log:
+            self.stream_handler = logging.StreamHandler()
+            self.logger.addHandler(self.stream_handler)
 
         # create log file
         log_file_path = os.path.join(log_dir_path, "run.log")
@@ -101,13 +138,8 @@ class CustomLogger():
         self.file_handler = logging.FileHandler(log_file_path)
         self.logger.addHandler(self.file_handler)
 
-        # plot to console if wanted
-        if stream_log:
-            self.stream_handler = logging.StreamHandler()
-            self.logger.addHandler(self.stream_handler)
 
-
-def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict):
+def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_dict, train_config_dict, faulty_data_creation_config_dict):
     """
         Function to store all config dicts as JSON files in config_path of the run dir.
 
@@ -116,17 +148,22 @@ def store_used_config(run_paths_dict, label_mapping_dict, preprocessing_config_d
             - label_mapping_dict (dict): Dict containing label to number mapping of this run
             - preprocessing_config_dict (dict): Dict containing preprocessing config of this run
             - train_config_dict (dict): Dict containing training config of this run
+            - faulty_data_creation_config_dict (dict): Dict containing config for faulty data creation
     """
     label_mapping_config_path = path.join(
-        run_paths_dict["config_path"], "label_mapping_config.json")
+        run_paths_dict["config_path"], "label_mapping.json")
     preprocessing_config_path = path.join(
         run_paths_dict["config_path"], "preprocessing_config.json")
     train_config_path = path.join(
         run_paths_dict["config_path"], "train_config.json")
+    faulty_data_creation_config_path = path.join(
+        run_paths_dict["config_path"], "faulty_data_creation_config.json")
 
     save_struct_as_json(label_mapping_config_path, label_mapping_dict)
     save_struct_as_json(preprocessing_config_path, preprocessing_config_dict)
     save_struct_as_json(train_config_path, train_config_dict)
+    save_struct_as_json(faulty_data_creation_config_path,
+                        faulty_data_creation_config_dict)
 
 
 def save_struct_as_json(new_file_path, dict_to_save):
@@ -139,3 +176,77 @@ def save_struct_as_json(new_file_path, dict_to_save):
     """
     with open(new_file_path, "w") as fp:
         json.dump(dict_to_save, fp, indent=3)
+
+
+def get_run_name_for_logging(sensors, model):
+    """
+        Function to get name for logging which summarizes the run.
+
+        Parameters:
+            - model (torch.nn): Model which shall be trained
+            - sensors (list): List containing all sensors which are present in the datasets
+
+        Returns:
+            display_name (str): Name summarizing the used sensors and model for the run + the time when run was started
+    """
+    display_name = ""
+    num_cams = 0
+    num_timeseries = 0
+
+    # get amount von cameras and timeseries data from sensors for short name
+    for sensor in sensors:
+        if "Cam" in sensor:
+            num_cams += 1
+        else:
+            num_timeseries += 1
+
+    if num_cams > 0:
+        display_name += f"{num_cams}c"
+
+    if num_timeseries > 0:
+        display_name += f"{num_timeseries}t"
+
+    # add few details about model to name
+    if len(sensors) == 1:
+        # for uni-modal models the name of the sensor is most important
+        display_name += f"_{sensors[0]}"
+    else:
+        # for multi-modal models the type of the fusion model is important to be mentioned
+        if "Transformer" in str(type(model.fusion_model)):
+            display_name += "_transformer"
+        elif "Concatenate_" in str(type(model.fusion_model)):
+            display_name += "_refModel"
+        else:
+            display_name += "_multimod"
+
+    # append date and time of run to name
+    display_name += datetime.datetime.now().strftime(
+        '_%d.%m_%H:%M:%S')
+
+    return display_name
+
+
+def get_git_revision_hash() -> str:
+    """
+        Function to get hash of git currently checked out git commit.
+        Implementation taken from: https://stackoverflow.com/questions/14989858/get-the-current-git-hash-in-a-python-script
+
+        Returns:
+            (str): Full hash of checked out commit of the repo
+    """
+    return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
+
+
+def get_number_of_parameters(model):
+    """
+        Function to get number of total parameters for PyTorch model.
+        Implementation taken from: https://stackoverflow.com/questions/49201236/check-the-total-number-of-parameters-in-a-pytorch-model
+
+        Parameters:
+            - model (torch.nn): Model which shall be trained
+
+        Returns:
+            - pytorch_total_params (int): Number of parameters for the model
+    """
+    pytorch_total_params = sum(p.numel() for p in model.parameters())
+    return pytorch_total_params

@@ -1,5 +1,24 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from math import sqrt
+
+
+def visualize_img_as_path_seq(patch_seq):
+    """
+        Visualize the Patch sequence of a single image (not a whole batch!) expected in shape [seq_len, c, h, w]
+
+        Parameters:
+            - patch_seq (torch.Tensor): Sequence of patches from a single image.
+    """
+    axis_size = int(sqrt(patch_seq.shape[0]))
+
+    fig = plt.figure(figsize=(axis_size, axis_size))
+
+    for i in range(patch_seq.shape[0]):
+        patch_as_img = np.transpose(patch_seq[i], (1, 2, 0))
+
+        ax = fig.add_subplot(axis_size, axis_size, i+1, xticks=[], yticks=[])
+        plt.imshow(patch_as_img)
 
 
 def visualize_data_sample_or_batch(data_dict, label=None, prediction=None):
@@ -14,7 +33,7 @@ def visualize_data_sample_or_batch(data_dict, label=None, prediction=None):
             - label (int or Tensor): Optional label/ labels for the data_dict
             - prediction (int or Tensor): Optional prediction/ predictions for the data_dict
     """
-    
+
     plt.rcParams.update({'font.size': 16})
     # initialize variables
     columns = 4
@@ -37,7 +56,7 @@ def visualize_data_sample_or_batch(data_dict, label=None, prediction=None):
             stereo_cam_name = sensor.split("Right")[0]
         else:
             continue
-        
+
         # check whether stereo cam is already present
         for present_stereo_cam in stereo_cams:
             if present_stereo_cam in sensor:
@@ -116,7 +135,7 @@ def visualize_data_sample_or_batch(data_dict, label=None, prediction=None):
             x = np.arange(0, np.shape(imu_data)[0])
             plt.plot(x, imu_data)
 
-    # if label and prediction are available, add both as title 
+    # if label and prediction are available, add both as title
     if label != None and prediction != None:
         if type(label) == type(prediction):
             if type(label) != int:
@@ -128,7 +147,7 @@ def visualize_data_sample_or_batch(data_dict, label=None, prediction=None):
 
             plt.suptitle(
                 f"Prediction = {prediction} / Ground Truth = {label}", fontsize=18)
-    # if only label is available, add it as title 
+    # if only label is available, add it as title
     elif label != None:
         if type(label) != int:
             # get first label from batch
@@ -138,6 +157,7 @@ def visualize_data_sample_or_batch(data_dict, label=None, prediction=None):
         plt.suptitle(f"Ground Truth = {label}", fontsize=18)
 
     plt.show()
+
 
 def visualize_weights_of_dense_layer(trained_model, sensors, split_plot_for_each_sensor=True):
     """
@@ -149,9 +169,9 @@ def visualize_weights_of_dense_layer(trained_model, sensors, split_plot_for_each
             - split_plot_for_each_sensor (bool): Default = True. Select whether one big plot shall be shown (False) or whether
                                                  subplots for each feature extractor shall be shown (True)
     """
-    
+
     plt.rcParams.update({'font.size': 16})
-    #extract state dict
+    # extract state dict
     params_dict = trained_model.state_dict()
 
     weights = params_dict["classification_layers.0.weight"].numpy()
@@ -184,7 +204,7 @@ def visualize_weights_of_dense_layer(trained_model, sensors, split_plot_for_each
 
         # create plot
         rows = 3
-        columns =3
+        columns = 3
         fig = plt.figure(figsize=(20, 20))
         ax = []
 
@@ -193,10 +213,12 @@ def visualize_weights_of_dense_layer(trained_model, sensors, split_plot_for_each
             # add next subplot and title
             ax.append(fig.add_subplot(rows, columns, index+1))
             ax[-1].set_title(sensors[index])
-            plt.imshow(cur_weight.transpose(1,0), cmap="viridis", vmin=0, vmax = 1, interpolation="none")
+            plt.imshow(cur_weight.transpose(1, 0), cmap="viridis",
+                       vmin=0, vmax=1, interpolation="none")
 
     else:
         # complete plot (usually to big to be interpretable)
-        plt.imshow(params_dict["classification_layers.0.weight"].numpy(), cmap="viridis", interpolation="nearest")
+        plt.imshow(params_dict["classification_layers.0.weight"].numpy(
+        ), cmap="viridis", interpolation="nearest")
 
     plt.show()

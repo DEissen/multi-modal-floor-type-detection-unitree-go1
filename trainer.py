@@ -3,12 +3,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-import datetime
 import logging
 import os
 
 # custom imports
 from metrics.confusion_matrix import ConfusionMatrix
+from custom_utils.utils import get_run_name_for_logging, get_git_revision_hash, get_number_of_parameters
 
 
 class Trainer():
@@ -18,9 +18,9 @@ class Trainer():
         Results and logs of the run will be stored in dir specified by run_paths_dict.
     """
 
-    def __init__(self, model, ds_train, ds_val, sensors, config_dict, run_paths_dict):
+    def __init__(self, model, ds_train, ds_val, sensors, config_dict, run_paths_dict, perform_wandb_sweep):
         """
-            Constructor of Trainer() class.
+            Init method of Trainer() class.
 
             Parameters:
                 - model (torch.nn): Model which shall be trained
@@ -29,6 +29,7 @@ class Trainer():
                 - sensors (list): List containing all sensors which are present in the datasets
                 - config_dict (dict): Dict containing the configuration for the training
                 - run_paths_dict (dict): Dict containing all important paths for saving results and logs
+                - perform_wandb_sweep (bool): Boolean flag if data shall be written to Weights & Biases for hyperparameter sweep
         """
         # store parameters as members
         self.model = model
@@ -36,6 +37,7 @@ class Trainer():
         self.config_dict = config_dict
         self.log_interval = self.config_dict["train_log_interval"]
         self.run_paths_dict = run_paths_dict
+        self.perform_wandb_sweep = perform_wandb_sweep
 
         # member for early stopping detection
         self.best_accuracy = 0
@@ -46,21 +48,16 @@ class Trainer():
             wandb.login()
 
             # create name of run based on current time and number of sensors
-            display_name = datetime.datetime.now().strftime(
-                '%d.%m_%H:%M:%S')
-            if len(self.sensors) == 1:
-                display_name += f"_{self.sensors[0]}"
-            else:
-                display_name += "_multimod"
+            display_name = get_run_name_for_logging(sensors, model)
 
-            wandb.init(project="FA", entity="st177975", dir=self.run_paths_dict["wandb_path"],
+            wandb.init(project="MA", entity="st177975", dir=self.run_paths_dict["wandb_path"],
                        config=self.config_dict, name=display_name, resume="auto")
 
         # create data loader
         self.ds_train_loader = DataLoader(ds_train,
-                                          batch_size=config_dict["batch_size"], shuffle=True, drop_last=True)
+                                          batch_size=config_dict["batch_size"], shuffle=True, drop_last=True, num_workers=8)
         self.ds_val_loader = DataLoader(ds_val,
-                                        batch_size=config_dict["batch_size"], shuffle=True, drop_last=True)
+                                        batch_size=config_dict["batch_size"], shuffle=True, drop_last=True, num_workers=8)
         # calculate number of steps per epoch for logging
         self.steps_per_epoch = int(len(ds_train)/config_dict["batch_size"])
 
@@ -77,25 +74,40 @@ class Trainer():
             raise Exception(
                 f"The optimizer '{self.config_dict['optimizer']}' is not supported!")
 
-        # initialize metrics
-        self.train_confusion_matrix = ConfusionMatrix(
-            self.config_dict["num_classes"])
-        self.val_confusion_matrix = ConfusionMatrix(
-            self.config_dict["num_classes"])
-
     def train(self):
         """
             Method to start the training of the model, including evaluation and logging during training.
         """
         logging.info('######### Start training #########')
+
+        # log checked out git hash of training in run_paths logs path
+        git_hash_file_path = os.path.join(
+            self.run_paths_dict["logs_path"], "git_hash.txt")
+
+        git_hash = get_git_revision_hash()
+        logging.info(f"Training is done based on commit '{git_hash}'")
+
+        with open(git_hash_file_path, mode="w") as f:
+            f.write(git_hash)
+
         # check and log used device for training
-        device = (
+        self.device = (
             "cuda"
             if torch.cuda.is_available()
             else "cpu"
         )
+        if self.device == "cuda":
+            torch.backends.cudnn.benchmark = True  # according to https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html this can improve training performance
+        self.model.to(self.device)
+        num_params = get_number_of_parameters(self.model)
         logging.info(
-            f"Using {device} device to train the following model:\n{self.model}")
+            f"Using {self.device} device to train the following model with {num_params} parameters:\n{self.model}")
+
+        # initialize metrics
+        self.train_confusion_matrix = ConfusionMatrix(
+            self.config_dict["num_classes"], self.device)
+        self.val_confusion_matrix = ConfusionMatrix(
+            self.config_dict["num_classes"], self.device)
 
         # set model to training mode to be sure dropout and BN layers work as expected
         self.model.train()
@@ -108,6 +120,12 @@ class Trainer():
 
             # iterate over all batches of the dataset once
             for step_index, (data_dict, labels) in enumerate(self.ds_train_loader, 0):
+                # put data and labels to self.device if it is cuda
+                if self.device == "cuda":
+                    labels = labels.to(self.device)
+                    for key in data_dict.keys():
+                        data_dict[key] = data_dict[key].to(self.device)
+
                 # update parameters for this batch
                 self.train_step(data_dict, labels)
 
@@ -127,7 +145,7 @@ class Trainer():
             self.save_current_model(epoch_index+1, force_save)
 
             # ### check for early stopping
-            accuracy = self.train_confusion_matrix.get_accuracy()
+            accuracy = self.val_confusion_matrix.get_accuracy()
 
             # check for increased performance
             if self.best_accuracy < (accuracy - 0.05):
@@ -136,9 +154,9 @@ class Trainer():
             else:
                 self.early_stopping_counter += 1
 
-            if (self.early_stopping_counter == 3 and self.best_accuracy > 0.9) or self.early_stopping_counter == 5:
+            if (self.early_stopping_counter == 2 and self.best_accuracy > 0.9) or self.early_stopping_counter == 4:
                 logging.info(
-                    f"Accuracy did not increase by at least 5% during for {self.early_stopping_counter} epochs, thus training will be stopped now!")
+                    f"Validation accuracy did not increase by at least 5% during for {self.early_stopping_counter} epochs, thus training will be stopped now!")
                 logging.info('######### Finished training #########')
                 wandb.finish()
                 return
@@ -154,18 +172,11 @@ class Trainer():
                 - data_dict (dict): Batch of data which is stored as a dict where the sensor names are the key
                 - labels (list): Labels for the batch
         """
-        # prepare data from data_dict for model
-        if len(self.sensors) == 1:
-            # extract input for uni-modal case
-            inputs = data_dict[self.sensors[0]]
-        else:
-            inputs = data_dict
-
         # zero the parameter gradients
         self.optimizer.zero_grad()
 
         # forward + backward + optimize
-        outputs = self.model(inputs)
+        outputs = self.model(data_dict)
         loss = self.train_loss_object(outputs, labels)
         loss.backward()
         self.optimizer.step()
@@ -239,7 +250,7 @@ class Trainer():
         logging.info(logging_message)
 
         # log to wandb if configured
-        if self.config_dict["use_wandb"]:
+        if self.config_dict["use_wandb"] or self.perform_wandb_sweep:
             wandb.log({'Train/loss': self.train_loss,
                        "Train/acc": train_accuracy,
                        "Train/sensitivity": train_sensitivity,
@@ -267,15 +278,13 @@ class Trainer():
 
         with torch.no_grad():
             for (data_dict, labels) in self.ds_val_loader:
-                # prepare data_dict for model
-                if len(self.sensors) == 1:
-                    # extract input for uni-modal case
-                    inputs = data_dict[self.sensors[0]]
-                else:
-                    inputs = data_dict
-
+                # put data and labels to self.device if it is cuda
+                if self.device == "cuda":
+                    labels = labels.to(self.device)
+                    for key in data_dict.keys():
+                        data_dict[key] = data_dict[key].to(self.device)
                 # get predicitons
-                outputs = self.model(inputs)
+                outputs = self.model(data_dict)
 
                 # add loss of batch to validation loss
                 self.val_loss += self.val_loss_object(outputs, labels)
@@ -283,7 +292,7 @@ class Trainer():
                 # update metrics
                 _, predicted = torch.max(outputs.data, 1)
                 self.val_confusion_matrix.update(predicted, labels)
-        
+
         # calculate average validation loss
         self.val_loss = self.val_loss / len(self.ds_val_loader)
 
