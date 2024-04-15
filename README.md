@@ -22,6 +22,8 @@ This "How to" is further split in several subchapters. Each will describe how to
     1. modality nets (for modality specific feature extraction)
     2. fusion model (to combine the unimodal representations)
     3. classification head (for the final classification)
+- Here is a visualization of the model:
+![Model architecture](./models/model_architecture.png)
 - The existing model architectures and parts can be found in the module **models/** where they can be modified and new parts can be added:
     - *classification_heads.py*: Contains all classification heads based on MultiModalBaseClass() to create final model with
     - *fusion_models.py*: Contains all fusion models based on FusionModelBaseClass() to create fusion model with
@@ -38,41 +40,45 @@ This "How to" is further split in several subchapters. Each will describe how to
 ### Training of a single model
 For training a following parameters must be set:
 - perform_training of main() must be set to True (default value!)
-- sensors list should be modified for to contain all sensors which the model shall use (should be done in *configs/default_config.json* and not as function parameter)
+- sensors list should be modified to contain all sensors which the model shall use (should be done in *configs/default_config.json* and not as function parameter)
 - run_path of main() should be an empty string to prevent mixing up some logs (default value!)
 - num_ckpt_to_load of main() should be empty (default value!)
 - logger of main() should be None (default value!)
 - modify the configuration for the training in *configs/default_config.json* and not by providing a dict as the function parameter train_config_dict
 ### Training of multiple models
 - You can train multiple models by calling the main() function multiple times. Examples can be found in *manual_tests.py* where functions are present to:
-    - train a model architecture for all sensors as a unimodal net
-    - train a configurable amount of random multimodal models (same config for all models, but sensors are selected randomly)
-    - train a model with the same sensors and the same config multiple times
+    - complete_unimodal_test(): train a model architecture for all sensors as a unimodal net
+    - test_random_multimodal_models(): train a configurable amount of random multimodal models (same config for all models, but sensors are selected randomly)
+    - perform_test_multiple_times(): train a model with the same sensors and the same config multiple times
+    - evaluate_hyp_opt_runs(): Run evaluation of all models at runs_base_path, e.g. to get best model from hyperparameter optimization
 ### Perform hyperparameter optimization
 Hyperparameter optimization is supported using wandb (Weights&Biases) which contains some user specific configuration which might be needed to be updated.
 - For details about the sweep configuration, ... which is related to wandb, see the official [documentation](https://docs.wandb.ai/guides/sweeps).
 - For modification of the hyperparameters an update in the sweep_configuration (tells wandb which parameters shall be optimized and which values these can take) dict and inside function update_config_dict_with_wandb_config() (maps the chosen config from wandb to the loaded default config) is mandatory
 
 ### Evaluation of a model
-TODO: further update from here!
-For training a following parameters must be set:
+For evaluation of a model, the following parameters must be set:
 - perform_training of main() must be set to False
-- run_path of main() must be the path where the training was logged, e.g. r"D:\<path_to_repo>\runs\run_05_09__15_35_41"
+- run_path of main() must be the path where the training was logged, e.g. r"<path_to_repo>\runs\run_05_09__15_35_41"
 - num_ckpt_to_load of main() should be set to the number of the checkpoint you want to load (if None is provided, the latest found checkpoint will be used)
 - logger of main() should be None
 - complete configuration from training will be reused from *<run_path>\config\\* including used sensors, dataset preprocessing, ...\
-=> modify configuration there in case you want to change something
+- you can select whether the classification shall be visualized (plot confusion matrix and prediction for one data sample) in the training configuration with the value of "visualize_results"
+=> configuration must be changed at the run_path location in case you want to change something
 ### Check robustness of a model
 This can be done for model training or model evaluation (see previous use cases) with the following additional adaptions:
-- Modify the config file (default config found in *FTDDataset\configs\faulty_data_creation_config.json* or in *<run_path>\config\faulty_data_creation_config.json*) according to your use case:
+- Modify the config file *<run_path>\config\faulty_data_creation_config.json* according to your use case:
     - Set value for "create_faulty_data" to true to enable faulty data creation
-    - Provide lists of sensors for which faulty data shall be created (e.g. key "Cams for brightness")
+    - Provide lists of sensors for which faulty data shall be created (e.g. key "Cams for guassian_noise")
     - Modify the limit/ intensity values in the config for the faulty data creation (e.g. key "offset_min")
 ### Check whether a model is adaptive
 This is not automatically supported, as this highly dependent on the model architecture.
 
 # Folder structure and module descriptions
 This section contains a brief overview about all files in the repository. The code is structured in five modules/subfolder which contain code for different purposes.
+- **configs/** \
+This directory contains the default configuration for training.
+    - *default_config.json:* Configuration used for training
 - **custom_utils/** \
 This module contains some custom utility functions used in the repository.
     - *utils.py:* Utility functions mainly for logging (including storage of logs)
@@ -82,17 +88,25 @@ This is git submodule of the [Floor-Type-Detection-Dataset](https://github.tik.u
 This module contains all code related to metrics for training/ evaluation.
     - *confusion_matrix.py:* Contains a class with methods to directly get accuracy, sensitivity, ... for two or more classes.
 - **models/** \
-TODO: update if implemenation is finished => This module contains the used model architectures.
-    - *multimodal_models.py:* Contains a class to create a multimodal model with two or more sensors from the FTD Dataset as input.
-    - *unimodal_models.py:* Contains two models for images and one model for timeseries data as input.
+This module contains all code related to the model architecture including the model builder where the model is built by combining the parts of the other modules.
+    - *classification_heads.py*: Contains all classification heads based on MultiModalBaseClass() to create final model with
+    - *fusion_models.py*: Contains all fusion models based on FusionModelBaseClass() to create fusion model with
+    - *modality_nets.py*: Contains all modality nets based on ModalityNetBaseClass() to create modality nets with
+    - *model_architecture.png*: Image showing model architecture for README.md
+    - *model_base_classes.py*: Contains the base classes for each part of the architecture to take over some common parts (e.g. compatibility checks of input, ...) 
+    - *model_builder.py*: Contains the logic to build a model based on the configuration from *configs/default_config.json*
+    - *positional_encodings.py*: Contains all positional encodings for transformers
+    - *tokenEmbeddings.py*: Contains all token embeddings for transformers
+    - *transformers.py*: Contains all transformer layers and blocks
 - **visualization/** \
 This module contains a file different visualization functions.
     - *visualization.py:* Contains a function to plot data (as sample or batch) from uni or multi-modal FloorTypeDetectionDataset as well as a function to visualize the weights of the first classification layer from a model.
 - *evaluation.py*: Contains a function to evaluate a trained model.
+- *hyperparameter_optimization.py*: Contains a function to perform a hyperparameter optimization using Weights&Biases.
 - *main.py*: Main program to start training and/ or evaluation of a model
+- *manual_tests.py*: Contains functions to perform multiple trainings in a row (e.g. to train the same model multiple times)
 - *README.md*: The file you are reading right now :)
-- TODO: Update with other files present in final version
-- *sweeps_and_tests.py*: TODO when implementation is done
+- *test.ipynb*: Jupyter Notebook for testing of functions which already contains different imports for testing
 - *trainer.py*: Contains a class for training a model and logging the metrics to a log file and Weights&Biases.
 
 # Authors
