@@ -1,9 +1,9 @@
 # Multi-Modal_ML-Eissen (FA 3526, MA 3606)
-This is the repo for the following works at the IAS Institute from University Stuttgart:
+This is the repo for the following works at the [IAS Institute from University Stuttgart](https://www.ias.uni-stuttgart.de/en/):
 - FA 3526 "Robustes und Adaptives Multi-Modal Machine Learning für die Bodentyperkennung eines mobilen Roboters"
 - MA 3606 "Multi-Modale Bodentyperkennung mithilfe von Transformer Netzwerken"
     
-It contains the [Floor-Type-Detection-Dataset](https://github.tik.uni-stuttgart.de/ac136427/Floor-Type-Detection-Dataset) repository as a submodule for using the FTD Dataset. \
+It contains the [floor-type-detection-dataset](https://github.com/DEissen/floor-type-detection-dataset) repository as a submodule for using the FTD Dataset. \
 The *main.py* program must be executed for training and evaluation of models where different use cases can be run by modifying the configuration in */configs/default_config.json*.
 Besides *main.py* only the programs of *hyperparameter_optimization.py* and *manual_tests.py* are intended to be directly executed (see details below). 
 
@@ -16,7 +16,7 @@ This "How to" is further split in several subchapters. Each will describe how to
 2. Prepare the FTDDataset (either download an existing version or create a new one from some measurements)
 ### Common setup of the dataset
 - Modify dataset config (path to train, val and test datasets), as well as the sensors which shall be used in the file *configs/default_config.json*
-- Further config changes (preprocessing, failure data creation and label mapping) can be done in the config files of the FTDDataset submodule directly. For details see the explanation in the README.md of the [Floor-Type-Detection-Dataset](https://github.tik.uni-stuttgart.de/ac136427/Floor-Type-Detection-Dataset) repo.
+- Further config changes (preprocessing, failure data creation and label mapping) can be done in the config files of the FTDDataset submodule directly. For details see the explanation in the README.md of the [floor-type-detection-dataset](https://github.com/DEissen/floor-type-detection-dataset) repo.
 ### Changing the model architecture
 - The model is created by the model_builder in *models/model_builder.py* which has always a feature fusion architecture consisting of three parts:
     1. modality nets (for modality specific feature extraction)
@@ -83,7 +83,7 @@ This directory contains the default configuration for training.
 This module contains some custom utility functions used in the repository.
     - *utils.py:* Utility functions mainly for logging (including storage of logs)
 - **FTDDataset/** \
-This is git submodule of the [Floor-Type-Detection-Dataset](https://github.tik.uni-stuttgart.de/ac136427/Floor-Type-Detection-Dataset) repository. For more details see the README.md of the submodule.
+This is git submodule of the [floor-type-detection-dataset](https://github.com/DEissen/floor-type-detection-dataset) repository. For more details see the README.md of the submodule.
 - **metrics/** \
 This module contains all code related to metrics for training/ evaluation.
     - *confusion_matrix.py:* Contains a class with methods to directly get accuracy, sensitivity, ... for two or more classes.
