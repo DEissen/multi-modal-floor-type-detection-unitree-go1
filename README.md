@@ -103,6 +103,7 @@ This module contains a file different visualization functions.
     - *visualization.py:* Contains a function to plot data (as sample or batch) from uni or multi-modal FloorTypeDetectionDataset as well as a function to visualize the weights of the first classification layer from a model.
 - *evaluation.py*: Contains a function to evaluate a trained model.
 - *hyperparameter_optimization.py*: Contains a function to perform a hyperparameter optimization using Weights&Biases.
+- *LICENSE.txt*: License file
 - *main.py*: Main program to start training and/ or evaluation of a model
 - *manual_tests.py*: Contains functions to perform multiple trainings in a row (e.g. to train the same model multiple times)
 - *README.md*: The file you are reading right now :)
